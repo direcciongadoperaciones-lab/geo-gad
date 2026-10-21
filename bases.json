@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "nombre": "GAD Morón",
+    "localidad": "Morón",
+    "lat": -34.6542,
+    "lng": -58.6193,
+    "unidades": 12,
+    "estado": "Activo"
+  },
+  {
+    "id": 2,
+    "nombre": "GAD La Matanza",
+    "localidad": "La Matanza",
+    "lat": -34.7606,
+    "lng": -58.5575,
+    "unidades": 18,
+    "estado": "Activo"
+  },
+  {
+    "id": 3,
+    "nombre": "GAD Quilmes",
+    "localidad": "Quilmes",
+    "lat": -34.7202,
+    "lng": -58.2541,
+    "unidades": 9,
+    "estado": "Inactivo"
+  }
+]

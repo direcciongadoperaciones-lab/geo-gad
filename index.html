@@ -1,88 +1,19 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GAD GEO V15.2</title>
-<meta property="og:title" content="GAD GEO V15.2" />
-  <meta property="og:description" content="Sistema de Geolocalización Operativa - 45 Bases GAD" />
-  <meta property="og:image" content="https://gad-geo.vercel.app/icon-512.png" />
-  <meta property="og:image:width" content="512" />
-  <meta property="og:image:height" content="512" />
-  <meta property="og:type" content="website" />
- <link rel="icon" type="image/png" href="/icon-512.png" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/src/style.css" />
-</head>
-<body>
-<div id="app">
-  <div id="login" class="login-screen">
-    <div class="login-card">
-      <div class="logo-gold">GAD GEO</div>
-      <input id="user" placeholder="Usuario ej: gad.moron" />
-      <input id="pass" type="password" placeholder="Contraseña" />
-      <button id="btnLogin">INGRESAR</button>
-      <button id="btnInstall" class="install-btn">📲 INSTALAR APP</button>
-    </div>
-  </div>
-
-  <div id="main" class="main-layout hidden">
-    <div id="sidebar" class="sidebar">
-      <div class="header-gold">GAD GEO <span id="roleBadge"></span></div>
-      <div class="counters">
-        <span id="cRojo">🔴 0</span>
-        <span id="cAmar">🟡 0</span>
-        <span id="cViaje">🚐 0</span>
-        <span id="cTotal">TOTAL 45</span>
-      </div>
-      <input id="searchBase" placeholder="Buscar base..." />
-      <div class="focus-btns">
-        <button data-focus="all">🌎 TODO PBA</button>
-        <button data-focus="conu">🏙️ CONURBANO</button>
-        <button data-focus="interior">🌾 INTERIOR</button>
-      </div>
-      <div id="listaBases"></div>
-      <div id="gestionUsuarios" class="hidden"></div>
-      <button id="btnExcel">📊 EXCEL</button>
-      <div id="alertaMensual" class="hidden alerta-mensual">📥 DESCARGAR ESTADISTICA MES ANTERIOR</div>
-    </div>
-    <div id="map"></div>
-    <div id="detalle" class="detalle hidden"></div>
-  </div>
-
-  <!-- Modal Confirm -->
-  <div id="modalConfirm" class="modal hidden">
-    <div class="modal-card">
-      <p id="modalText"></p>
-      <div class="modal-btns">
-        <button id="modalSi">SI</button>
-        <button id="modalNo">NO</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Panel Efectivo -->
-  <div id="panelEfectivo" class="panel-efectivo hidden">
-    <div class="efectivo-card">
-      <h3 id="efBaseName"></h3>
-      <label>1 D.G.A.D.O</label><input id="fDgado" />
-      <label>2 SERVICIO</label>
-      <select id="fServicio">
-        <option>ALLANAMIENTO</option><option>MANIFESTACION</option><option>OPERATIVO PREVENCION</option><option>INSPECCION DE CALABOZOS</option><option>CONTROL VEHICULAR</option><option>OTRO</option>
-      </select>
-      <input id="fServicioOtro" placeholder="Escribir servicio" class="hidden"/>
-      <label>3 HORARIO</label><input id="fHorario" disabled />
-      <label>4 LUGAR</label><input id="fLugar" placeholder="Av. Arieta 1234, La Matanza" />
-      <label>5 A CARGO</label><input id="fACargo" />
-      <label>6 TELEFONO</label><input id="fTel" />
-      <button id="btnIniciar" class="btn-verde">INICIAR SERVICIO Y COMPARTIR UBICACION</button>
-      <button id="btnFinalizar" class="btn-rojo">FINALIZAR SERVICIO</button>
-      <button id="btnMsgOfi" class="btn-azul">ENVIAR MENSAJE A OFICINA</button>
-      <div id="estadoGPS">EN BASE - GPS OFF</div>
-    </div>
-  </div>
-</div>
-<script type="module" src="/src/main.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GEO-GAD | Division Operaciones</title>
+    <meta property="og:title" content="GEOLOCALIZACION GAD - DIVISION OPERACIONES" />
+    <meta property="og:description" content="Sistema Oficial de Geolocalizacion Operativa GAD PBA" />
+    <meta property="og:image" content="/icons/escudo-pwa.jpg" />
+    <meta name="theme-color" content="#000000" />
+    <link rel="apple-touch-icon" href="/icons/escudo-pwa.jpg" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  </head>
+  <body class="bg-black text-white m-0 p-0 overflow-x-hidden">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
 </html>
