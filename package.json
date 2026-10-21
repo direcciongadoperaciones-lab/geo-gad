@@ -1,0 +1,19 @@
+{
+  "name": "gad-geo-v15-2",
+  "version": "15.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "firebase": "10.12.5",
+    "leaflet": "1.9.4",
+    "@turf/turf": "6.5.0"
+  },
+  "devDependencies": {
+    "vite": "5.2.0",
+    "vite-plugin-pwa": "0.17.4"
+  }
+}
