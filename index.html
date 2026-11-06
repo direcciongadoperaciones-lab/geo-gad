@@ -1,163 +1,263 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta name="color-scheme" content="only light" />
-<meta name="supported-color-schemes" content="light" />
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<meta name="theme-color" content="#000000" />
-<title>GEO-GAD | División Operaciones</title>
-<link rel="icon" type="image/svg+xml" href="/logo.svg" />
-<link rel="apple-touch-icon" href="/icons/escudo-pwa.jpg" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://cdn.tailwindcss.com"></script>
-<style id="gad-shield-protection">
-:root, html, body {
-  color-scheme: only light !important;
-  forced-color-adjust: none !important;
-  -webkit-forced-color-adjust: none !important;
-}
-.leaflet-marker-icon, .leaflet-marker-icon svg, .custom-gad-shield, .custom-gad-shield svg, .leaflet-pane svg {
-  color-scheme: only light !important;
-  forced-color-adjust: none !important;
-  -webkit-forced-color-adjust: none !important;
-  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.95)) !important;
-  -webkit-filter: drop-shadow(0 3px 6px rgba(0,0,0,0.95)) !important;
-}
-.gad-red-unit-pulse {
-  width: 28px; height: 28px; background-color: #ef4444; border: 3px solid #ffffff; border-radius: 50%;
-  box-shadow: 0 0 0 12px rgba(239, 68, 68, 0.7), 0 0 22px #000000;
-  animation: gadPulseRed 1.2s infinite;
-}
-.gad-yellow-unit-pulse {
-  width: 28px; height: 28px; background-color: #eab308; border: 3px solid #000000; border-radius: 50%;
-  box-shadow: 0 0 0 12px rgba(234, 179, 8, 0.7), 0 0 22px #000000;
-}
-@keyframes gadPulseRed {
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.95); transform: scale(1); }
-  70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); transform: scale(1.15); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
-}
-.gad-pin-exacto { background: transparent !important; border: 0 !important; margin: 0 !important; padding: 0 !important; }
-</style>
-<script id="gad-radar-v148">
-(function() {
-  window.__GAD_MAP_INSTANCE = null;
-  window.__GAD_MARKERS = window.__GAD_MARKERS || {};
+  <meta name="color-scheme" content="only light" />
+  <meta name="supported-color-schemes" content="light" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#000000" />
+  <title>GEO-GAD | División Operaciones</title>
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <link rel="apple-touch-icon" href="/icons/escudo-pwa.jpg" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
 
-  function capturarMapa() {
-    if (!window.L || !window.L.Map || window.L.Map.__gadHooked) return;
-    window.L.Map.__gadHooked = true;
-    window.L.Map.addInitHook(function() {
-      window.__GAD_MAP_INSTANCE = this;
-    });
-  }
-  setInterval(capturarMapa, 150);
+  <script id="gad-geofence-4km">
+    // 1. Cálculo matemático real de distancia en KM (Haversine)
+    window.calcularDistanciaRealKm = function(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    };
 
-  function sincronizarPuntosMapa() {
-    var map = window.__GAD_MAP_INSTANCE;
-    if (!map || !window.L) return;
+    // 2. REGLA ESTRICTA: Solo auto-corta a VERDE si está a menos de 3 KM Y lleva 30 minutos estacionado (<200m)
+    window.__GAD_CONTROL_ESTACIONADO = window.__GAD_CONTROL_ESTACIONADO || {};
 
-    try {
-      var raw = localStorage.getItem('geo_gad_bases_activas_v1') || localStorage.getItem('geo_gad_estadisticas_v1') || localStorage.getItem('geo_gad_historial_v1') || '{}';
-      var parsed;
-      try { parsed = JSON.parse(raw); } catch(e) { parsed = {}; }
+    window.calcularDistanciaKmGAD = function(lat1, lon1, lat2, lon2) {
+      const distReal = window.calcularDistanciaRealKm(lat1, lon1, lat2, lon2);
+      if (distReal > 3.0) return distReal;
 
-      var arr = [];
-      if (Array.isArray(parsed)) {
-        arr = parsed;
-      } else if (parsed && typeof parsed === 'object') {
-        Object.keys(parsed).forEach(function(k) {
-          var item = parsed[k];
-          if (item && typeof item === 'object') {
-            item.id = item.id || k;
-            arr.push(item);
-          }
-        });
+      const claveBase = Number(lat2).toFixed(3) + "_" + Number(lon2).toFixed(3);
+      const ahora = Date.now();
+      const registro = window.__GAD_CONTROL_ESTACIONADO[claveBase];
+
+      if (!registro) {
+        window.__GAD_CONTROL_ESTACIONADO[claveBase] = { lat: lat1, lon: lon1, desde: ahora };
+        return 25.0; // Recién iniciado o detectado: devuelve 25km para PROHIBIR que el auto-corte lo pase a VERDE
       }
 
-      var rojos = 0;
-      var amarillos = 0;
-
-      arr.forEach(function(u, idx) {
-        var lat = parseFloat(u.lat || u.latitude || (u.coords && u.coords.lat));
-        var lng = parseFloat(u.lng || u.lon || u.longitude || (u.coords && u.coords.lng));
-        if (isNaN(lat) || isNaN(lng)) return;
-
-        var id = String(u.id || u.base || u.nombre || ('u_' + idx));
-        var est = String(u.estado || u.status || u.color || 'ROJO').toUpperCase();
-        var esAmarillo = est.includes('AMARILL') || est === 'YELLOW';
-
-        if (est.includes('VERD') || est.includes('FINALIZ')) return;
-
-        if (esAmarillo) amarillos++; else rojos++;
-
-        var clase = esAmarillo ? 'gad-yellow-unit-pulse' : 'gad-red-unit-pulse';
-        var titulo = (u.base || u.nombre || id).toUpperCase();
-        var serv = (u.tipoServicio || u.servicio || 'EN SERVICIO ACTIVO').toUpperCase();
-        var aCargo = u.aCargo || u.jerarquia || '';
-
-        var htmlPopup = '<div style="background:#0a0a0a;color:#fff;padding:12px;border:2px solid #d4af37;border-radius:8px;min-width:210px;font-family:sans-serif;">' +
-          '<div style="color:#d4af37;font-weight:bold;font-size:14px;margin-bottom:6px;">🚨 ' + titulo + '</div>' +
-          '<div style="font-size:12px;margin-bottom:3px;"><b>ESTADO:</b> <span style="color:' + (esAmarillo ? '#eab308' : '#ef4444') + ';font-weight:bold;">' + (esAmarillo ? 'REPLIEGUE (AMARILLO)' : 'EN SERVICIO (ROJO)') + '</span></div>' +
-          '<div style="font-size:12px;margin-bottom:3px;"><b>SERVICIO:</b> ' + serv + '</div>' +
-          (aCargo ? '<div style="font-size:12px;"><b>A CARGO:</b> ' + aCargo + '</div>' : '') +
-          '</div>';
-
-        if (!window.__GAD_MARKERS[id]) {
-          var icon = window.L.divIcon({
-            className: 'gad-pin-exacto',
-            html: '<div class="' + clase + '" title="' + titulo + '"></div>',
-            iconSize: [28, 28],
-            iconAnchor: [14, 14]
-          });
-          var marker = window.L.marker([lat, lng], { icon: icon, zIndexOffset: 9999 }).addTo(map).bindPopup(htmlPopup);
-          window.__GAD_MARKERS[id] = marker;
-        } else {
-          window.__GAD_MARKERS[id].setLatLng([lat, lng]);
-          window.__GAD_MARKERS[id].setPopupContent(htmlPopup);
-          if (!map.hasLayer(window.__GAD_MARKERS[id])) {
-            window.__GAD_MARKERS[id].addTo(map);
-          }
-        }
-      });
-
-      if (rojos > 0 || amarillos > 0) {
-        document.querySelectorAll('button, span, div').forEach(function(el) {
-          if (el.children.length <= 2) {
-            var txt = (el.innerText || '').trim();
-            if (/^ROJO:\s*\d+/i.test(txt)) el.innerHTML = el.innerHTML.replace(/ROJO:\s*\d+/i, 'ROJO: ' + rojos);
-            if (/^AMARILLO:\s*\d+/i.test(txt)) el.innerHTML = el.innerHTML.replace(/AMARILLO:\s*\d+/i, 'AMARILLO: ' + amarillos);
-          }
-        });
+      const movMetros = window.calcularDistanciaRealKm(registro.lat, registro.lon, lat1, lon1) * 1000;
+      if (movMetros >= 200) {
+        window.__GAD_CONTROL_ESTACIONADO[claveBase] = { lat: lat1, lon: lon1, desde: ahora };
+        return 25.0; // Se movió más de 200m: reinicia reloj de 30 min
       }
-    } catch (e) {}
-  }
 
-  setInterval(sincronizarPuntosMapa, 1000);
+      const minutosQuieto = (ahora - registro.desde) / 60000;
+      if (minutosQuieto >= 30) {
+        return distReal; // Cumplió 30 minutos estacionado dentro de los 3km -> Habilita corte a VERDE
+      }
 
-  const origFetch = window.fetch.bind(window);
-  window.fetch = async function(url, options) {
-    var resp = await origFetch(url, options);
-    try {
-      var clone = resp.clone();
-      clone.json().then(function(data) {
-        if (data) {
-          localStorage.setItem('geo_gad_estadisticas_v1', JSON.stringify(data));
-          sincronizarPuntosMapa();
+      return 25.0; // Todavía no cumplió 30 min estacionado -> Se mantiene ROJO/AMARILLO en el mapa
+    };
+
+    // Optimización Cloudflare Free Tier (<50% en peor escenario 24hs con 45 bases + 7 pantallas)
+    window.INTERVALO_ROJO_MS = 120000; // 2 minutos
+    window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros (condicionado a 30 min estacionado)
+  </script>
+
+  <style id="gad-shield-protection">
+    :root, html, body {
+      color-scheme: only light !important;
+      forced-color-adjust: none !important;
+      -webkit-forced-color-adjust: none !important;
+    }
+    .leaflet-marker-icon, .leaflet-marker-icon svg, .custom-gad-shield, .custom-gad-shield svg, .leaflet-pane svg {
+      color-scheme: only light !important;
+      forced-color-adjust: none !important;
+      -webkit-forced-color-adjust: none !important;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.95)) !important;
+      -webkit-filter: drop-shadow(0 3px 6px rgba(0,0,0,0.95)) !important;
+    }
+  </style>
+
+  <style id="gad-pin-exacto-style-v100">
+    .gad-pin-exacto {
+      background: transparent !important;
+      border: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+    .leaflet-marker-icon.gad-pin-exacto {
+      animation: none !important;
+      transition: none !important;
+    }
+  </style>
+
+  <script id="gad-fix-definitivo-v150">
+    (function() {
+      // A. Mantener en memoria la última coordenada real del GPS del teléfono
+      window.__GAD_ULTIMO_GPS_REAL = null;
+
+      if (navigator.geolocation) {
+        const origGet = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
+        const origWatch = navigator.geolocation.watchPosition.bind(navigator.geolocation);
+
+        navigator.geolocation.getCurrentPosition = function(success, error, opts) {
+          origGet(function(pos) {
+            if (pos && pos.coords) {
+              window.__GAD_ULTIMO_GPS_REAL = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            }
+            if (success) success(pos);
+          }, function(err) {
+            origGet(function(pos2) {
+              if (pos2 && pos2.coords) {
+                window.__GAD_ULTIMO_GPS_REAL = { lat: pos2.coords.latitude, lng: pos2.coords.longitude };
+              }
+              if (success) success(pos2);
+            }, error, { enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 });
+          }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+        };
+
+        navigator.geolocation.watchPosition = function(success, error, opts) {
+          return origWatch(function(pos) {
+            if (pos && pos.coords) {
+              window.__GAD_ULTIMO_GPS_REAL = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            }
+            if (success) success(pos);
+          }, error, { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 });
+        };
+      }
+
+      // B. Interceptor de Red: Evita que el bucle de 2s borre las bases en ROJO/AMARILLO que están a <3km (ej. 144M)
+      const origFetch = window.fetch.bind(window);
+      window.__GAD_BASES_ACTIVAS_BLINDADAS = {};
+
+      window.fetch = async function(url, options) {
+        const urlStr = typeof url === "string" ? url : (url && url.url ? url.url : "");
+        const metodo = (options && options.method) ? options.method.toUpperCase() : "GET";
+
+        // 1. Si se envía un POST a /api/sync
+        if (metodo === "POST" && urlStr.includes("/api/sync") && options && options.body) {
+          try {
+            const payload = JSON.parse(options.body);
+
+            // Si el móvil inicia servicio o reporta en ROJO/AMARILLO
+            if (payload && payload.base && (payload.base.estado === "ROJO" || payload.base.estado === "AMARILLO")) {
+              const b = payload.base;
+              // Si tiene GPS real del celular, usarlo
+              if (window.__GAD_ULTIMO_GPS_REAL) {
+                b.lat = window.__GAD_ULTIMO_GPS_REAL.lat;
+                b.lng = window.__GAD_ULTIMO_GPS_REAL.lng;
+              }
+              // Si el móvil está pegado a la base (<3.5km), separar levemente la coordenada enviada al motor
+              // para que el auto-corte interno de 4km de index-C_z0-38_.js NO lo pase a VERDE automáticamente
+              const distABase = window.calcularDistanciaRealKm(b.lat, b.lng, b.baseLat, b.baseLng);
+              if (distABase < 4.2) {
+                const permitidoCortar = window.calcularDistanciaKmGAD(b.lat, b.lng, b.baseLat, b.baseLng) <= 3.0;
+                if (!permitidoCortar) {
+                  b.latRealEfectivo = b.lat;
+                  b.lngRealEfectivo = b.lng;
+                }
+              }
+              window.__GAD_BASES_ACTIVAS_BLINDADAS[b.id] = {
+                ...b,
+                blindajeTs: Date.now()
+              };
+              options.body = JSON.stringify(payload);
+            }
+
+            // Si el bucle interno intenta auto-cortar a VERDE sin que hayan tocado "Finalizar" (sin finalizarRegistro)
+            if (payload && payload.base && payload.base.estado === "VERDE" && !payload.finalizarRegistro && !payload.forceAllVerde) {
+              const bGuardada = window.__GAD_BASES_ACTIVAS_BLINDADAS[payload.base.id];
+              if (bGuardada && (Date.now() - bGuardada.blindajeTs < 1800000)) {
+                // Bloquear auto-corte automático antes de los 30 minutos: mantener en ROJO/AMARILLO
+                payload.base = {
+                  ...payload.base,
+                  estado: bGuardada.estado,
+                  dgado: bGuardada.dgado,
+                  servicio: bGuardada.servicio,
+                  lugar: bGuardada.lugar,
+                  aCargo: bGuardada.aCargo,
+                  telefono: bGuardada.telefono,
+                  horarioInicio: bGuardada.horarioInicio,
+                  lat: bGuardada.lat,
+                  lng: bGuardada.lng
+                };
+                options.body = JSON.stringify(payload);
+              }
+            }
+
+            // Si finalizaron servicio manualmente, liberar el blindaje de esa base
+            if (payload && (payload.finalizarRegistro || payload.forceAllVerde)) {
+              if (payload.base && payload.base.id) {
+                delete window.__GAD_BASES_ACTIVAS_BLINDADAS[payload.base.id];
+              } else if (payload.forceAllVerde) {
+                window.__GAD_BASES_ACTIVAS_BLINDADAS = {};
+              }
+            }
+          } catch (e) {}
         }
-      }).catch(function(){});
-    } catch(e) {}
-    return resp;
-  };
-})();
-</script>
-<script type="module" crossorigin src="/assets/index-C_z0-38_.js"></script>
-<link rel="stylesheet" crossorigin href="/assets/index-rsKGP0I_.css">
-<link rel="manifest" href="/manifest.webmanifest">
-<script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script>
+
+        const response = await origFetch(url, options);
+
+        // 2. Al recibir el estado de /api/sync en el mapa (GET), reconstruir en ROJO toda base cuyo servicio siga "EN CURSO"
+        if (metodo === "GET" && urlStr.includes("/api/sync")) {
+          try {
+            const clone = response.clone();
+            const data = await clone.json();
+            if (data && typeof data === "object") {
+              data.bases = data.bases || {};
+              const historial = Array.isArray(data.historial) ? data.historial : [];
+
+              // Si en el historial hay un servicio "EN CURSO", asegurar que su base figure activa en data.bases
+              historial.forEach(function(reg) {
+                if (!reg || (reg.horaFin && reg.horaFin !== "EN CURSO")) return;
+                const bId = Number(reg.baseId || reg.idBase || 0);
+                const bExistente = bId ? data.bases[bId] : null;
+
+                if (bExistente && bExistente.estado === "VERDE") {
+                  bExistente.estado = "ROJO";
+                  bExistente.dgado = reg.dgado || bExistente.dgado || "ACTIVO";
+                  bExistente.servicio = reg.servicio || reg.actividad || bExistente.servicio || "SERVICIO";
+                  bExistente.lugar = reg.lugar || bExistente.lugar || "";
+                  bExistente.aCargo = reg.aCargo || bExistente.aCargo || "";
+                  bExistente.telefono = reg.telefono || bExistente.telefono || "";
+                  bExistente.horarioInicio = reg.horaInicio || reg.horario || bExistente.horarioInicio || "";
+                }
+              });
+
+              // Aplicar blindaje a todas las bases que están en ROJO o AMARILLO para que el mapa las dibuje siempre
+              Object.keys(data.bases).forEach(function(idKey) {
+                const bRemota = data.bases[idKey];
+                if (bRemota && (bRemota.estado === "ROJO" || bRemota.estado === "AMARILLO")) {
+                  window.__GAD_BASES_ACTIVAS_BLINDADAS[idKey] = {
+                    ...bRemota,
+                    blindajeTs: window.__GAD_BASES_ACTIVAS_BLINDADAS[idKey]?.blindajeTs || Date.now()
+                  };
+                } else if (window.__GAD_BASES_ACTIVAS_BLINDADAS[idKey]) {
+                  // Si no fue cerrada por orden explícita y lleva menos de 30 min, mantenerla viva
+                  const blindada = window.__GAD_BASES_ACTIVAS_BLINDADAS[idKey];
+                  if (Date.now() - blindada.blindajeTs < 1800000) {
+                    data.bases[idKey] = blindada;
+                  }
+                }
+              });
+
+              return new Response(JSON.stringify(data), {
+                status: response.status,
+                headers: { "Content-Type": "application/json" }
+              });
+            }
+          } catch (e) {}
+        }
+
+        return response;
+      };
+    })();
+  </script>
+
+  <script type="module" crossorigin src="/assets/index-C_z0-38_.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-rsKGP0I_.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script>
 </head>
 <body class="bg-black text-white select-none">
-<div id="root"></div>
+  <div id="root"></div>
 </body>
 </html>
