@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<script id="gad-autoclean-vercel-cache-v140">(function() {try {var VERSION_ACTUAL = "GAD_PBA_V146_CLOUDFLARE";var verGuardada = localStorage.getItem("geo_gad_client_version");if (verGuardada !== VERSION_ACTUAL) {if ('serviceWorker' in navigator) {navigator.serviceWorker.getRegistrations().then(function(regs) {for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }});}if (window.caches && typeof window.caches.keys === "function") {window.caches.keys().then(function(keys) {keys.forEach(function(key) { window.caches.delete(key); });});}localStorage.setItem("geo_gad_client_version", VERSION_ACTUAL);if (window.location.hostname.includes("vercel.app") || !localStorage.getItem("geo_gad_reloaded_clean")) {localStorage.setItem("geo_gad_reloaded_clean", "1");window.location.reload(true);}}} catch (e) {}})();</script>
-<script id="gad-purge-yesterday-v110">(function() {try {var hoy = new Date().toLocaleDateString('es-AR');var ultDia = localStorage.getItem('geo_gad_dia_operativo_v110');if (ultDia !== hoy) {localStorage.setItem('geo_gad_bases_activas_v1', '{}');localStorage.setItem('geo_gad_dia_operativo_v110', hoy);}} catch (e) {}})();</script>
 <meta name="color-scheme" content="only light" />
 <meta name="supported-color-schemes" content="light" />
 <meta charset="UTF-8" />
@@ -13,24 +11,6 @@
 <link rel="apple-touch-icon" href="/icons/escudo-pwa.jpg" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.tailwindcss.com"></script>
-<script id="gad-geofence-4km">
-window.calcularDistanciaRealKm = function(lat1, lon1, lat2, lon2) {
-  if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  return R * c;
-};
-window.calcularDistanciaKmGAD = function(lat1, lon1, lat2, lon2) {
-  return window.calcularDistanciaRealKm(lat1, lon1, lat2, lon2);
-};
-window.INTERVALO_ROJO_MS = 120000;
-window.RADIO_CORTE_VERDE_KM = 3.0;
-</script>
 <style id="gad-shield-protection">
 :root, html, body {
   color-scheme: only light !important;
@@ -44,152 +24,118 @@ window.RADIO_CORTE_VERDE_KM = 3.0;
   filter: drop-shadow(0 3px 6px rgba(0,0,0,0.95)) !important;
   -webkit-filter: drop-shadow(0 3px 6px rgba(0,0,0,0.95)) !important;
 }
-.gad-blue-dot-pulse {
-  width: 18px; height: 18px; background-color: #2563eb; border: 3px solid #ffffff; border-radius: 50%;
-  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.45), 0 0 12px rgba(0,0,0,0.9);
-  animation: gadPulseBlue 1.8s infinite;
-}
 .gad-red-unit-pulse {
-  width: 26px; height: 26px; background-color: #ef4444; border: 3px solid #ffffff; border-radius: 50%;
-  box-shadow: 0 0 0 10px rgba(239, 68, 68, 0.65), 0 0 20px #000000;
-  animation: gadPulseRed 1.3s infinite;
+  width: 28px; height: 28px; background-color: #ef4444; border: 3px solid #ffffff; border-radius: 50%;
+  box-shadow: 0 0 0 12px rgba(239, 68, 68, 0.7), 0 0 22px #000000;
+  animation: gadPulseRed 1.2s infinite;
 }
 .gad-yellow-unit-pulse {
-  width: 26px; height: 26px; background-color: #eab308; border: 3px solid #000000; border-radius: 50%;
-  box-shadow: 0 0 0 10px rgba(234, 179, 8, 0.65), 0 0 20px #000000;
-}
-@keyframes gadPulseBlue {
-  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.85); }
-  70% { box-shadow: 0 0 0 14px rgba(37, 99, 235, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+  width: 28px; height: 28px; background-color: #eab308; border: 3px solid #000000; border-radius: 50%;
+  box-shadow: 0 0 0 12px rgba(234, 179, 8, 0.7), 0 0 22px #000000;
 }
 @keyframes gadPulseRed {
   0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.95); transform: scale(1); }
-  70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); transform: scale(1.12); }
+  70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); transform: scale(1.15); }
   100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
 }
-</style>
-<style id="gad-pin-exacto-style-v100">
 .gad-pin-exacto { background: transparent !important; border: 0 !important; margin: 0 !important; padding: 0 !important; }
 </style>
-<script id="gad-cirugia-senior-v146">
+<script id="gad-radar-v148">
 (function() {
   window.__GAD_MAP_INSTANCE = null;
-  window.__GAD_BLUE_MARKER = null;
-  window.__GAD_BLUE_CIRCLE = null;
-  window.__GAD_PERSISTENT_MARKERS = window.__GAD_PERSISTENT_MARKERS || {};
-  window.__GAD_LAST_POS = { lat: -34.6534, lng: -58.6198, acc: 25, ts: Date.now() };
+  window.__GAD_MARKERS = window.__GAD_MARKERS || {};
 
-  function hookLeaflet() {
+  function capturarMapa() {
     if (!window.L || !window.L.Map || window.L.Map.__gadHooked) return;
     window.L.Map.__gadHooked = true;
     window.L.Map.addInitHook(function() {
       window.__GAD_MAP_INSTANCE = this;
-      for (var k in window.__GAD_PERSISTENT_MARKERS) {
-        var m = window.__GAD_PERSISTENT_MARKERS[k];
-        if (m && !this.hasLayer(m)) m.addTo(this);
-      }
     });
   }
-  setInterval(hookLeaflet, 100);
+  setInterval(capturarMapa, 150);
 
-  // Bucle de sincronización y persistencia absoluta en pantalla
-  function blindarPuntosEnMapa() {
+  function sincronizarPuntosMapa() {
     var map = window.__GAD_MAP_INSTANCE;
     if (!map || !window.L) return;
 
     try {
-      // 1. Leer estadísticas y localStorage de bases activas
-      var activasJson = localStorage.getItem('geo_gad_bases_activas_v1') || localStorage.getItem('geo_gad_estadisticas_v1') || '{}';
-      var data;
-      try { data = JSON.parse(activasJson); } catch(e) { data = {}; }
+      var raw = localStorage.getItem('geo_gad_bases_activas_v1') || localStorage.getItem('geo_gad_estadisticas_v1') || localStorage.getItem('geo_gad_historial_v1') || '{}';
+      var parsed;
+      try { parsed = JSON.parse(raw); } catch(e) { parsed = {}; }
 
-      var listaUnidades = [];
-
-      // Extraer de cualquier estructura interna de la app
-      if (Array.isArray(data)) {
-        listaUnidades = data;
-      } else if (data && typeof data === 'object') {
-        Object.keys(data).forEach(function(k) {
-          var item = data[k];
+      var arr = [];
+      if (Array.isArray(parsed)) {
+        arr = parsed;
+      } else if (parsed && typeof parsed === 'object') {
+        Object.keys(parsed).forEach(function(k) {
+          var item = parsed[k];
           if (item && typeof item === 'object') {
             item.id = item.id || k;
-            listaUnidades.push(item);
+            arr.push(item);
           }
         });
       }
 
-      // También revisar si hay datos en la tabla global de React o window
-      if (window.__GAD_ESTADISTICAS_GLOBALES && Array.isArray(window.__GAD_ESTADISTICAS_GLOBALES)) {
-        listaUnidades = listaUnidades.concat(window.__GAD_ESTADISTICAS_GLOBALES);
-      }
+      var rojos = 0;
+      var amarillos = 0;
 
-      var rojosCount = 0;
-      var amarillosCount = 0;
-
-      listaUnidades.forEach(function(u, idx) {
-        var lat = parseFloat(u.lat || u.latitude || (u.coords && u.coords.lat) || -34.65 + (idx * 0.01));
-        var lng = parseFloat(u.lng || u.lon || u.longitude || (u.coords && u.coords.lng) || -58.61 + (idx * 0.01));
+      arr.forEach(function(u, idx) {
+        var lat = parseFloat(u.lat || u.latitude || (u.coords && u.coords.lat));
+        var lng = parseFloat(u.lng || u.lon || u.longitude || (u.coords && u.coords.lng));
         if (isNaN(lat) || isNaN(lng)) return;
 
-        var id = String(u.id || u.base || u.nombre || ('unidad_' + idx));
+        var id = String(u.id || u.base || u.nombre || ('u_' + idx));
         var est = String(u.estado || u.status || u.color || 'ROJO').toUpperCase();
         var esAmarillo = est.includes('AMARILL') || est === 'YELLOW';
-        
+
         if (est.includes('VERD') || est.includes('FINALIZ')) return;
 
-        if (esAmarillo) amarillosCount++; else rojosCount++;
+        if (esAmarillo) amarillos++; else rojos++;
 
-        var claseCss = esAmarillo ? 'gad-yellow-unit-pulse' : 'gad-red-unit-pulse';
+        var clase = esAmarillo ? 'gad-yellow-unit-pulse' : 'gad-red-unit-pulse';
         var titulo = (u.base || u.nombre || id).toUpperCase();
         var serv = (u.tipoServicio || u.servicio || 'EN SERVICIO ACTIVO').toUpperCase();
         var aCargo = u.aCargo || u.jerarquia || '';
-        var hora = u.hora || u.horario || 'En vivo';
 
-        var popupHtml = '<div style="background:#0a0a0a;color:#fff;padding:12px;border:2px solid #d4af37;border-radius:8px;min-width:210px;font-family:sans-serif;">' +
+        var htmlPopup = '<div style="background:#0a0a0a;color:#fff;padding:12px;border:2px solid #d4af37;border-radius:8px;min-width:210px;font-family:sans-serif;">' +
           '<div style="color:#d4af37;font-weight:bold;font-size:14px;margin-bottom:6px;">🚨 ' + titulo + '</div>' +
-          '<div style="font-size:12px;margin-bottom:3px;"><b>ESTADO:</b> <span style="color:' + (esAmarillo ? '#eab308' : '#ef4444') + ';font-weight:bold;">' + (esAmarillo ? 'REGRESANDO (AMARILLO)' : 'EN SERVICIO (ROJO)') + '</span></div>' +
+          '<div style="font-size:12px;margin-bottom:3px;"><b>ESTADO:</b> <span style="color:' + (esAmarillo ? '#eab308' : '#ef4444') + ';font-weight:bold;">' + (esAmarillo ? 'REPLIEGUE (AMARILLO)' : 'EN SERVICIO (ROJO)') + '</span></div>' +
           '<div style="font-size:12px;margin-bottom:3px;"><b>SERVICIO:</b> ' + serv + '</div>' +
-          (aCargo ? '<div style="font-size:12px;margin-bottom:3px;"><b>A CARGO:</b> ' + aCargo + '</div>' : '') +
-          '<div style="font-size:11px;color:#aaa;">INICIO: ' + hora + '</div>' +
+          (aCargo ? '<div style="font-size:12px;"><b>A CARGO:</b> ' + aCargo + '</div>' : '') +
           '</div>';
 
-        if (!window.__GAD_PERSISTENT_MARKERS[id]) {
+        if (!window.__GAD_MARKERS[id]) {
           var icon = window.L.divIcon({
             className: 'gad-pin-exacto',
-            html: '<div class="' + claseCss + '" title="' + titulo + '"></div>',
-            iconSize: [26, 26],
-            iconAnchor: [13, 13]
+            html: '<div class="' + clase + '" title="' + titulo + '"></div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
           });
-          var marker = window.L.marker([lat, lng], { icon: icon, zIndexOffset: 9999 }).addTo(map).bindPopup(popupHtml);
-          window.__GAD_PERSISTENT_MARKERS[id] = marker;
+          var marker = window.L.marker([lat, lng], { icon: icon, zIndexOffset: 9999 }).addTo(map).bindPopup(htmlPopup);
+          window.__GAD_MARKERS[id] = marker;
         } else {
-          window.__GAD_PERSISTENT_MARKERS[id].setLatLng([lat, lng]);
-          window.__GAD_PERSISTENT_MARKERS[id].setPopupContent(popupHtml);
-          if (!map.hasLayer(window.__GAD_PERSISTENT_MARKERS[id])) {
-            window.__GAD_PERSISTENT_MARKERS[id].addTo(map);
+          window.__GAD_MARKERS[id].setLatLng([lat, lng]);
+          window.__GAD_MARKERS[id].setPopupContent(htmlPopup);
+          if (!map.hasLayer(window.__GAD_MARKERS[id])) {
+            window.__GAD_MARKERS[id].addTo(map);
           }
         }
       });
 
-      // Refrescar contadores en la barra superior
-      if (rojosCount > 0 || amarillosCount > 0) {
+      if (rojos > 0 || amarillos > 0) {
         document.querySelectorAll('button, span, div').forEach(function(el) {
           if (el.children.length <= 2) {
             var txt = (el.innerText || '').trim();
-            if (/^ROJO:\s*\d+/i.test(txt)) el.innerHTML = el.innerHTML.replace(/ROJO:\s*\d+/i, 'ROJO: ' + rojosCount);
-            if (/^AMARILLO:\s*\d+/i.test(txt)) el.innerHTML = el.innerHTML.replace(/AMARILLO:\s*\d+/i, 'AMARILLO: ' + amarillosCount);
+            if (/^ROJO:\s*\d+/i.test(txt)) el.innerHTML = el.innerHTML.replace(/ROJO:\s*\d+/i, 'ROJO: ' + rojos);
+            if (/^AMARILLO:\s*\d+/i.test(txt)) el.innerHTML = el.innerHTML.replace(/AMARILLO:\s*\d+/i, 'AMARILLO: ' + amarillos);
           }
         });
       }
-
-    } catch (err) {}
+    } catch (e) {}
   }
 
-  // Ejecutar permanentemente para asegurar que nunca desaparezcan los puntos
-  setInterval(blindarPuntosEnMapa, 1500);
+  setInterval(sincronizarPuntosMapa, 1000);
 
-  // Interceptor global de red para capturar posiciones al vuelo
   const origFetch = window.fetch.bind(window);
   window.fetch = async function(url, options) {
     var resp = await origFetch(url, options);
@@ -198,8 +144,7 @@ window.RADIO_CORTE_VERDE_KM = 3.0;
       clone.json().then(function(data) {
         if (data) {
           localStorage.setItem('geo_gad_estadisticas_v1', JSON.stringify(data));
-          window.__GAD_ESTADISTICAS_GLOBALES = Array.isArray(data) ? data : [data];
-          blindarPuntosEnMapa();
+          sincronizarPuntosMapa();
         }
       }).catch(function(){});
     } catch(e) {}
