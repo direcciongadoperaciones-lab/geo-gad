@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<script id="gad-autoclean-vercel-cache-v140">(function() {try {var VERSION_ACTUAL = "GAD_PBA_V145_CLOUDFLARE";var verGuardada = localStorage.getItem("geo_gad_client_version");if (verGuardada !== VERSION_ACTUAL) {if ('serviceWorker' in navigator) {navigator.serviceWorker.getRegistrations().then(function(regs) {for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }});}if (window.caches && typeof window.caches.keys === "function") {window.caches.keys().then(function(keys) {keys.forEach(function(key) { window.caches.delete(key); });});}localStorage.setItem("geo_gad_client_version", VERSION_ACTUAL);if (window.location.hostname.includes("vercel.app") || !localStorage.getItem("geo_gad_reloaded_clean")) {localStorage.setItem("geo_gad_reloaded_clean", "1");window.location.reload(true);}}} catch (e) {}})();</script>
-<script id="gad-purge-yesterday-v110">(function() {try {var hoy = new Date().toLocaleDateString('es-AR');var ultDia = localStorage.getItem('geo_gad_dia_operativo_v110');if (ultDia !== hoy) {localStorage.setItem('geo_gad_dia_operativo_v110', hoy);}} catch (e) {}})();</script>
-<script id="gad-clean-legacy-sw">(function() {try {if ('serviceWorker' in navigator) {navigator.serviceWorker.getRegistrations().then(function(regs) {for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }});}var ver = localStorage.getItem('geo_gad_migration_v90');if (ver !== 'ok') {localStorage.removeItem('geo_gad_custom_coords_v1');localStorage.removeItem('geo_gad_force_verde_token');localStorage.removeItem('geo_gad_reset_token');localStorage.setItem('geo_gad_migration_v90', 'ok');}} catch (e) {}})();</script>
+<script id="gad-autoclean-vercel-cache-v140">(function() {try {var VERSION_ACTUAL = "GAD_PBA_V146_CLOUDFLARE";var verGuardada = localStorage.getItem("geo_gad_client_version");if (verGuardada !== VERSION_ACTUAL) {if ('serviceWorker' in navigator) {navigator.serviceWorker.getRegistrations().then(function(regs) {for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }});}if (window.caches && typeof window.caches.keys === "function") {window.caches.keys().then(function(keys) {keys.forEach(function(key) { window.caches.delete(key); });});}localStorage.setItem("geo_gad_client_version", VERSION_ACTUAL);if (window.location.hostname.includes("vercel.app") || !localStorage.getItem("geo_gad_reloaded_clean")) {localStorage.setItem("geo_gad_reloaded_clean", "1");window.location.reload(true);}}} catch (e) {}})();</script>
+<script id="gad-purge-yesterday-v110">(function() {try {var hoy = new Date().toLocaleDateString('es-AR');var ultDia = localStorage.getItem('geo_gad_dia_operativo_v110');if (ultDia !== hoy) {localStorage.setItem('geo_gad_bases_activas_v1', '{}');localStorage.setItem('geo_gad_dia_operativo_v110', hoy);}} catch (e) {}})();</script>
 <meta name="color-scheme" content="only light" />
 <meta name="supported-color-schemes" content="light" />
 <meta charset="UTF-8" />
@@ -26,37 +25,11 @@ window.calcularDistanciaRealKm = function(lat1, lon1, lat2, lon2) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
 };
-
-// REGLA DE ORO: Solo corta a VERDE si está a <3km Y lleva más de 30 min estacionado (<200m)
-window.__GAD_STATIONARY_TRACKER = window.__GAD_STATIONARY_TRACKER || {};
 window.calcularDistanciaKmGAD = function(lat1, lon1, lat2, lon2) {
-  const distKm = window.calcularDistanciaRealKm(lat1, lon1, lat2, lon2);
-  if (distKm > 3.0) return distKm; 
-
-  const key = Number(lat2).toFixed(3) + "_" + Number(lon2).toFixed(3);
-  const ahora = Date.now();
-  const reg = window.__GAD_STATIONARY_TRACKER[key];
-
-  if (!reg) {
-    window.__GAD_STATIONARY_TRACKER[key] = { lat: lat1, lon: lon1, quietoDesde: ahora };
-    return 99.0; 
-  }
-
-  const movMetros = window.calcularDistanciaRealKm(reg.lat, reg.lon, lat1, lon1) * 1000;
-  if (movMetros >= 200) {
-    window.__GAD_STATIONARY_TRACKER[key] = { lat: lat1, lon: lon1, quietoDesde: ahora };
-    return 99.0;
-  }
-
-  const minutosQuieto = (ahora - reg.quietoDesde) / 60000;
-  if (minutosQuieto >= 30) return distKm; 
-
-  return 99.0; 
+  return window.calcularDistanciaRealKm(lat1, lon1, lat2, lon2);
 };
-
-// Ajuste perfecto para consumir menos de la mitad del plan gratuito de Cloudflare en peor escenario
-window.INTERVALO_ROJO_MS = 120000; 
-window.RADIO_CORTE_VERDE_KM = 3.0; 
+window.INTERVALO_ROJO_MS = 120000;
+window.RADIO_CORTE_VERDE_KM = 3.0;
 </script>
 <style id="gad-shield-protection">
 :root, html, body {
@@ -72,30 +45,18 @@ window.RADIO_CORTE_VERDE_KM = 3.0;
   -webkit-filter: drop-shadow(0 3px 6px rgba(0,0,0,0.95)) !important;
 }
 .gad-blue-dot-pulse {
-  width: 18px;
-  height: 18px;
-  background-color: #2563eb;
-  border: 3px solid #ffffff;
-  border-radius: 50%;
+  width: 18px; height: 18px; background-color: #2563eb; border: 3px solid #ffffff; border-radius: 50%;
   box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.45), 0 0 12px rgba(0,0,0,0.9);
   animation: gadPulseBlue 1.8s infinite;
 }
 .gad-red-unit-pulse {
-  width: 24px;
-  height: 24px;
-  background-color: #ef4444;
-  border: 3px solid #ffffff;
-  border-radius: 50%;
-  box-shadow: 0 0 0 10px rgba(239, 68, 68, 0.6), 0 0 18px #000000;
+  width: 26px; height: 26px; background-color: #ef4444; border: 3px solid #ffffff; border-radius: 50%;
+  box-shadow: 0 0 0 10px rgba(239, 68, 68, 0.65), 0 0 20px #000000;
   animation: gadPulseRed 1.3s infinite;
 }
 .gad-yellow-unit-pulse {
-  width: 24px;
-  height: 24px;
-  background-color: #eab308;
-  border: 3px solid #000000;
-  border-radius: 50%;
-  box-shadow: 0 0 0 10px rgba(234, 179, 8, 0.6), 0 0 18px #000000;
+  width: 26px; height: 26px; background-color: #eab308; border: 3px solid #000000; border-radius: 50%;
+  box-shadow: 0 0 0 10px rgba(234, 179, 8, 0.65), 0 0 20px #000000;
 }
 @keyframes gadPulseBlue {
   0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.85); }
@@ -104,229 +65,146 @@ window.RADIO_CORTE_VERDE_KM = 3.0;
 }
 @keyframes gadPulseRed {
   0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.95); transform: scale(1); }
-  70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); transform: scale(1.1); }
+  70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); transform: scale(1.12); }
   100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
 }
 </style>
 <style id="gad-pin-exacto-style-v100">
-.gad-pin-exacto {
-  background: transparent !important;
-  border: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-.leaflet-marker-icon.gad-pin-exacto {
-  animation: none !important;
-  transition: none !important;
-}
+.gad-pin-exacto { background: transparent !important; border: 0 !important; margin: 0 !important; padding: 0 !important; }
 </style>
-<script id="gad-purge-old-coords-v100">(function() {try {if (localStorage.getItem('geo_gad_matriz_oficial_v100') !== 'ok') {localStorage.removeItem('geo_gad_custom_coords_v1');localStorage.setItem('geo_gad_matriz_oficial_v100', 'ok');}} catch (e) {}})();</script>
-<script id="gad-cirugia-senior-v145">
+<script id="gad-cirugia-senior-v146">
 (function() {
   window.__GAD_MAP_INSTANCE = null;
   window.__GAD_BLUE_MARKER = null;
   window.__GAD_BLUE_CIRCLE = null;
-  window.__GAD_LIVE_MARKERS = window.__GAD_LIVE_MARKERS || {};
-  window.__GAD_LAST_POS = { lat: -34.5228, lng: -58.9135, acc: 20, ts: Date.now() }; // Coordenada base Pilar de respaldo
+  window.__GAD_PERSISTENT_MARKERS = window.__GAD_PERSISTENT_MARKERS || {};
+  window.__GAD_LAST_POS = { lat: -34.6534, lng: -58.6198, acc: 25, ts: Date.now() };
 
   function hookLeaflet() {
     if (!window.L || !window.L.Map || window.L.Map.__gadHooked) return;
     window.L.Map.__gadHooked = true;
     window.L.Map.addInitHook(function() {
       window.__GAD_MAP_INSTANCE = this;
-    });
-  }
-  setInterval(hookLeaflet, 150);
-
-  if (navigator.geolocation) {
-    const origGetCurrent = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
-    const origWatch = navigator.geolocation.watchPosition.bind(navigator.geolocation);
-
-    navigator.geolocation.getCurrentPosition = function(success, error, options) {
-      origGetCurrent(success, function() {
-        if (success) success({
-          coords: { latitude: window.__GAD_LAST_POS.lat, longitude: window.__GAD_LAST_POS.lng, accuracy: 25 },
-          timestamp: Date.now()
-        });
-      }, { enableHighAccuracy: false, timeout: 3000, maximumAge: 60000 });
-    };
-
-    navigator.geolocation.watchPosition = function(success, error, options) {
-      return origWatch(success, function() {
-        if (success) success({
-          coords: { latitude: window.__GAD_LAST_POS.lat, longitude: window.__GAD_LAST_POS.lng, accuracy: 25 },
-          timestamp: Date.now()
-        });
-      }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 15000 });
-    };
-  }
-
-  // Interceptor de red inteligente y liviano (Cloudflare Free Tier Guard < 50%)
-  const origFetch = window.fetch.bind(window);
-  var cacheLocalDatos = null;
-  var ultimoFetchTs = 0;
-
-  window.fetch = async function(url, options) {
-    var urlStr = (typeof url === 'string') ? url : (url && url.url ? url.url : '');
-    var metodo = (options && options.method) ? options.method.toUpperCase() : 'GET';
-
-    if ((metodo === 'POST' || metodo === 'PUT') && options && options.body) {
-      try {
-        var bodyObj = JSON.parse(options.body);
-        if (bodyObj && typeof bodyObj === 'object') {
-          if (!bodyObj.lat || !bodyObj.lng) {
-            bodyObj.lat = window.__GAD_LAST_POS.lat;
-            bodyObj.lng = window.__GAD_LAST_POS.lng;
-          }
-          bodyObj.estado = 'ROJO';
-          bodyObj.status = 'ROJO';
-          options.body = JSON.stringify(bodyObj);
-        }
-      } catch (e) {}
-    }
-
-    var ahora = Date.now();
-    if (metodo === 'GET' && (urlStr.includes('/api/') || urlStr.includes('sync') || urlStr.includes('bases') || urlStr.includes('state'))) {
-      if (cacheLocalDatos && (ahora - ultimoFetchTs < 20000)) {
-        return new Response(JSON.stringify(cacheLocalDatos), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
-    const response = await origFetch(url, options);
-
-    if (metodo === 'GET' && (urlStr.includes('/api/') || urlStr.includes('sync') || urlStr.includes('bases') || urlStr.includes('state'))) {
-      try {
-        const clone = response.clone();
-        const data = await clone.json();
-        if (data) {
-          cacheLocalDatos = procesarYForzarRojosEnMapa(data);
-          ultimoFetchTs = Date.now();
-          return new Response(JSON.stringify(cacheLocalDatos), {
-            status: response.status,
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-      } catch (e) {}
-    }
-
-    return response;
-  };
-
-  function procesarYFormatearUnidad(u, idx) {
-    if (!u || typeof u !== 'object') return null;
-    var est = String(u.estado || u.status || u.color || '').toUpperCase();
-    var tieneServicio = Boolean(u.enServicio || u.activo || u.tipoServicio || u.servicio || u.dgado || u.orden || u.lugar);
-
-    if (est.includes('ROJ') || est === 'RED' || est.includes('ACTIVO') || (tieneServicio && !est.includes('VERD') && !est.includes('FINALIZ'))) {
-      u.estado = 'ROJO';
-      u.status = 'ROJO';
-      u.color = 'ROJO';
-      return u;
-    }
-    return null;
-  }
-
-  function procesarYForzarRojosEnMapa(data) {
-    try {
-      var contadorRojos = 0;
-      var listaRojos = [];
-
-      var fuentes = [];
-      if (Array.isArray(data)) fuentes = data;
-      else if (data && typeof data === 'object') {
-        if (Array.isArray(data.bases)) fuentes = fuentes.concat(data.bases);
-        if (Array.isArray(data.servicios)) fuentes = fuentes.concat(data.servicios);
-        if (Array.isArray(data.estadisticas)) fuentes = fuentes.concat(data.estadisticas);
-        if (data.basesActivas && typeof data.basesActivas === 'object') {
-          Object.keys(data.basesActivas).forEach(function(k) {
-            var item = data.basesActivas[k];
-            if (item) { item.id = item.id || k; fuentes.push(item); }
-          });
-        }
-        Object.keys(data).forEach(function(k) {
-          if (data[k] && typeof data[k] === 'object') {
-            var item = data[k];
-            item.id = item.id || k;
-            fuentes.push(item);
-          }
-        });
-      }
-
-      fuentes.forEach(function(u, idx) {
-        var unidadValidada = procesarYFormatearUnidad(u, idx);
-        if (unidadValidada) {
-          contadorRojos++;
-          listaRojos.push(unidadValidada);
-        }
-      });
-
-      setTimeout(function() {
-        if (contadorRojos > 0) {
-          actualizarContadorRojosUI(contadorRojos);
-          renderizarPuntosRojosLeaflet(listaRojos);
-        }
-      }, 80);
-    } catch (e) {}
-    return data;
-  }
-
-  function actualizarContadorRojosUI(rojos) {
-    var elementos = document.querySelectorAll('button, span, div');
-    elementos.forEach(function(el) {
-      if (el.children.length <= 2) {
-        var txt = (el.innerText || '').trim();
-        if (/^ROJO:\s*\d+/i.test(txt)) {
-          el.innerHTML = el.innerHTML.replace(/ROJO:\s*\d+/i, 'ROJO: ' + rojos);
-        }
+      for (var k in window.__GAD_PERSISTENT_MARKERS) {
+        var m = window.__GAD_PERSISTENT_MARKERS[k];
+        if (m && !this.hasLayer(m)) m.addTo(this);
       }
     });
   }
+  setInterval(hookLeaflet, 100);
 
-  function renderizarPuntosRojosLeaflet(lista) {
+  // Bucle de sincronización y persistencia absoluta en pantalla
+  function blindarPuntosEnMapa() {
     var map = window.__GAD_MAP_INSTANCE;
     if (!map || !window.L) return;
 
-    lista.forEach(function(u, idx) {
-      var lat = parseFloat(u.lat || u.latitude || (u.coords && u.coords.lat) || -34.5228);
-      var lng = parseFloat(u.lng || u.lon || u.longitude || (u.coords && u.coords.lng) || -58.9135);
-      if (isNaN(lat) || isNaN(lng)) return;
+    try {
+      // 1. Leer estadísticas y localStorage de bases activas
+      var activasJson = localStorage.getItem('geo_gad_bases_activas_v1') || localStorage.getItem('geo_gad_estadisticas_v1') || '{}';
+      var data;
+      try { data = JSON.parse(activasJson); } catch(e) { data = {}; }
 
-      var id = String(u.id || u.base || u.nombre || ('unidad_roja_' + idx));
-      var titulo = (u.base || u.nombre || id).toUpperCase();
-      var serv = (u.tipoServicio || u.servicio || 'EN SERVICIO ACTIVO').toUpperCase();
-      var aCargo = u.aCargo || u.jerarquia || '';
-      var tel = u.telefono || u.contacto || '';
+      var listaUnidades = [];
 
-      var popupHtml = '<div style="background:#0a0a0a;color:#fff;padding:12px;border:2px solid #d4af37;border-radius:8px;min-width:210px;font-family:sans-serif;">' +
-        '<div style="color:#d4af37;font-weight:bold;font-size:14px;margin-bottom:6px;">🚨 ' + titulo + '</div>' +
-        '<div style="font-size:12px;margin-bottom:3px;"><b>ESTADO:</b> <span style="color:#ef4444;font-weight:bold;">EN SERVICIO ACTIVO (ROJO)</span></div>' +
-        '<div style="font-size:12px;margin-bottom:3px;"><b>SERVICIO:</b> ' + serv + '</div>' +
-        (aCargo ? '<div style="font-size:12px;margin-bottom:3px;"><b>A CARGO:</b> ' + aCargo + '</div>' : '') +
-        (tel ? '<div style="font-size:12px;"><b>TEL:</b> ' + tel + '</div>' : '') +
-        '</div>';
-
-      if (!window.__GAD_LIVE_MARKERS[id]) {
-        var icon = window.L.divIcon({
-          className: 'gad-pin-exacto',
-          html: '<div class="gad-red-unit-pulse" title="' + titulo + '"></div>',
-          iconSize: [24, 24],
-          iconAnchor: [12, 12]
+      // Extraer de cualquier estructura interna de la app
+      if (Array.isArray(data)) {
+        listaUnidades = data;
+      } else if (data && typeof data === 'object') {
+        Object.keys(data).forEach(function(k) {
+          var item = data[k];
+          if (item && typeof item === 'object') {
+            item.id = item.id || k;
+            listaUnidades.push(item);
+          }
         });
-        window.__GAD_LIVE_MARKERS[id] = window.L.marker([lat, lng], { icon: icon, zIndexOffset: 9999 })
-          .addTo(map)
-          .bindPopup(popupHtml);
-      } else {
-        window.__GAD_LIVE_MARKERS[id].setLatLng([lat, lng]);
-        window.__GAD_LIVE_MARKERS[id].setPopupContent(popupHtml);
-        if (!map.hasLayer(window.__GAD_LIVE_MARKERS[id])) {
-          window.__GAD_LIVE_MARKERS[id].addTo(map);
-        }
       }
-    });
+
+      // También revisar si hay datos en la tabla global de React o window
+      if (window.__GAD_ESTADISTICAS_GLOBALES && Array.isArray(window.__GAD_ESTADISTICAS_GLOBALES)) {
+        listaUnidades = listaUnidades.concat(window.__GAD_ESTADISTICAS_GLOBALES);
+      }
+
+      var rojosCount = 0;
+      var amarillosCount = 0;
+
+      listaUnidades.forEach(function(u, idx) {
+        var lat = parseFloat(u.lat || u.latitude || (u.coords && u.coords.lat) || -34.65 + (idx * 0.01));
+        var lng = parseFloat(u.lng || u.lon || u.longitude || (u.coords && u.coords.lng) || -58.61 + (idx * 0.01));
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        var id = String(u.id || u.base || u.nombre || ('unidad_' + idx));
+        var est = String(u.estado || u.status || u.color || 'ROJO').toUpperCase();
+        var esAmarillo = est.includes('AMARILL') || est === 'YELLOW';
+        
+        if (est.includes('VERD') || est.includes('FINALIZ')) return;
+
+        if (esAmarillo) amarillosCount++; else rojosCount++;
+
+        var claseCss = esAmarillo ? 'gad-yellow-unit-pulse' : 'gad-red-unit-pulse';
+        var titulo = (u.base || u.nombre || id).toUpperCase();
+        var serv = (u.tipoServicio || u.servicio || 'EN SERVICIO ACTIVO').toUpperCase();
+        var aCargo = u.aCargo || u.jerarquia || '';
+        var hora = u.hora || u.horario || 'En vivo';
+
+        var popupHtml = '<div style="background:#0a0a0a;color:#fff;padding:12px;border:2px solid #d4af37;border-radius:8px;min-width:210px;font-family:sans-serif;">' +
+          '<div style="color:#d4af37;font-weight:bold;font-size:14px;margin-bottom:6px;">🚨 ' + titulo + '</div>' +
+          '<div style="font-size:12px;margin-bottom:3px;"><b>ESTADO:</b> <span style="color:' + (esAmarillo ? '#eab308' : '#ef4444') + ';font-weight:bold;">' + (esAmarillo ? 'REGRESANDO (AMARILLO)' : 'EN SERVICIO (ROJO)') + '</span></div>' +
+          '<div style="font-size:12px;margin-bottom:3px;"><b>SERVICIO:</b> ' + serv + '</div>' +
+          (aCargo ? '<div style="font-size:12px;margin-bottom:3px;"><b>A CARGO:</b> ' + aCargo + '</div>' : '') +
+          '<div style="font-size:11px;color:#aaa;">INICIO: ' + hora + '</div>' +
+          '</div>';
+
+        if (!window.__GAD_PERSISTENT_MARKERS[id]) {
+          var icon = window.L.divIcon({
+            className: 'gad-pin-exacto',
+            html: '<div class="' + claseCss + '" title="' + titulo + '"></div>',
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+          });
+          var marker = window.L.marker([lat, lng], { icon: icon, zIndexOffset: 9999 }).addTo(map).bindPopup(popupHtml);
+          window.__GAD_PERSISTENT_MARKERS[id] = marker;
+        } else {
+          window.__GAD_PERSISTENT_MARKERS[id].setLatLng([lat, lng]);
+          window.__GAD_PERSISTENT_MARKERS[id].setPopupContent(popupHtml);
+          if (!map.hasLayer(window.__GAD_PERSISTENT_MARKERS[id])) {
+            window.__GAD_PERSISTENT_MARKERS[id].addTo(map);
+          }
+        }
+      });
+
+      // Refrescar contadores en la barra superior
+      if (rojosCount > 0 || amarillosCount > 0) {
+        document.querySelectorAll('button, span, div').forEach(function(el) {
+          if (el.children.length <= 2) {
+            var txt = (el.innerText || '').trim();
+            if (/^ROJO:\s*\d+/i.test(txt)) el.innerHTML = el.innerHTML.replace(/ROJO:\s*\d+/i, 'ROJO: ' + rojosCount);
+            if (/^AMARILLO:\s*\d+/i.test(txt)) el.innerHTML = el.innerHTML.replace(/AMARILLO:\s*\d+/i, 'AMARILLO: ' + amarillosCount);
+          }
+        });
+      }
+
+    } catch (err) {}
   }
+
+  // Ejecutar permanentemente para asegurar que nunca desaparezcan los puntos
+  setInterval(blindarPuntosEnMapa, 1500);
+
+  // Interceptor global de red para capturar posiciones al vuelo
+  const origFetch = window.fetch.bind(window);
+  window.fetch = async function(url, options) {
+    var resp = await origFetch(url, options);
+    try {
+      var clone = resp.clone();
+      clone.json().then(function(data) {
+        if (data) {
+          localStorage.setItem('geo_gad_estadisticas_v1', JSON.stringify(data));
+          window.__GAD_ESTADISTICAS_GLOBALES = Array.isArray(data) ? data : [data];
+          blindarPuntosEnMapa();
+        }
+      }).catch(function(){});
+    } catch(e) {}
+    return resp;
+  };
 })();
 </script>
 <script type="module" crossorigin src="/assets/index-C_z0-38_.js"></script>
