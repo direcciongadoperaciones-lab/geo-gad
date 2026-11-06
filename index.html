@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<script id="gad-autoclean-vercel-cache-v140">(function() {try {var VERSION_ACTUAL = "GAD_PBA_V144_CLOUDFLARE";var verGuardada = localStorage.getItem("geo_gad_client_version");if (verGuardada !== VERSION_ACTUAL) {if ('serviceWorker' in navigator) {navigator.serviceWorker.getRegistrations().then(function(regs) {for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }});}if (window.caches && typeof window.caches.keys === "function") {window.caches.keys().then(function(keys) {keys.forEach(function(key) { window.caches.delete(key); });});}localStorage.setItem("geo_gad_client_version", VERSION_ACTUAL);if (window.location.hostname.includes("vercel.app") || !localStorage.getItem("geo_gad_reloaded_clean")) {localStorage.setItem("geo_gad_reloaded_clean", "1");window.location.reload(true);}}} catch (e) {}})();</script>
+<script id="gad-autoclean-vercel-cache-v140">(function() {try {var VERSION_ACTUAL = "GAD_PBA_V145_CLOUDFLARE";var verGuardada = localStorage.getItem("geo_gad_client_version");if (verGuardada !== VERSION_ACTUAL) {if ('serviceWorker' in navigator) {navigator.serviceWorker.getRegistrations().then(function(regs) {for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }});}if (window.caches && typeof window.caches.keys === "function") {window.caches.keys().then(function(keys) {keys.forEach(function(key) { window.caches.delete(key); });});}localStorage.setItem("geo_gad_client_version", VERSION_ACTUAL);if (window.location.hostname.includes("vercel.app") || !localStorage.getItem("geo_gad_reloaded_clean")) {localStorage.setItem("geo_gad_reloaded_clean", "1");window.location.reload(true);}}} catch (e) {}})();</script>
 <script id="gad-purge-yesterday-v110">(function() {try {var hoy = new Date().toLocaleDateString('es-AR');var ultDia = localStorage.getItem('geo_gad_dia_operativo_v110');if (ultDia !== hoy) {localStorage.setItem('geo_gad_dia_operativo_v110', hoy);}} catch (e) {}})();</script>
 <script id="gad-clean-legacy-sw">(function() {try {if ('serviceWorker' in navigator) {navigator.serviceWorker.getRegistrations().then(function(regs) {for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }});}var ver = localStorage.getItem('geo_gad_migration_v90');if (ver !== 'ok') {localStorage.removeItem('geo_gad_custom_coords_v1');localStorage.removeItem('geo_gad_force_verde_token');localStorage.removeItem('geo_gad_reset_token');localStorage.setItem('geo_gad_migration_v90', 'ok');}} catch (e) {}})();</script>
 <meta name="color-scheme" content="only light" />
@@ -15,7 +15,6 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script id="gad-geofence-4km">
-// Cálculo exacto Haversine en KM
 window.calcularDistanciaRealKm = function(lat1, lon1, lat2, lon2) {
   if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
   const R = 6371;
@@ -28,41 +27,36 @@ window.calcularDistanciaRealKm = function(lat1, lon1, lat2, lon2) {
   return R * c;
 };
 
-// REGLA DE ORO DEL OFICIAL PRINCIPAL:
-// Solo permite el auto-corte a VERDE si está a menos de 3 KM **Y** lleva más de 30 minutos estacionado sin moverse (>200m).
-window.__GAD_STATIONARY_TRACKER = {};
+// REGLA DE ORO: Solo corta a VERDE si está a <3km Y lleva más de 30 min estacionado (<200m)
+window.__GAD_STATIONARY_TRACKER = window.__GAD_STATIONARY_TRACKER || {};
 window.calcularDistanciaKmGAD = function(lat1, lon1, lat2, lon2) {
   const distKm = window.calcularDistanciaRealKm(lat1, lon1, lat2, lon2);
-  if (distKm > 3.0) return distKm; // Está fuera de los 3km -> Sigue ROJO/AMARILLO normal
+  if (distKm > 3.0) return distKm; 
 
-  // Está dentro de los 3km: verificar si lleva más de 30 minutos estacionado
   const key = Number(lat2).toFixed(3) + "_" + Number(lon2).toFixed(3);
   const ahora = Date.now();
   const reg = window.__GAD_STATIONARY_TRACKER[key];
 
   if (!reg) {
     window.__GAD_STATIONARY_TRACKER[key] = { lat: lat1, lon: lon1, quietoDesde: ahora };
-    return 99.0; // Recién detectado, devolver >3km para que NO lo corte a verde
+    return 99.0; 
   }
 
   const movMetros = window.calcularDistanciaRealKm(reg.lat, reg.lon, lat1, lon1) * 1000;
   if (movMetros >= 200) {
-    // Se movió más de 200 metros: reinicia el reloj de estacionado
     window.__GAD_STATIONARY_TRACKER[key] = { lat: lat1, lon: lon1, quietoDesde: ahora };
     return 99.0;
   }
 
   const minutosQuieto = (ahora - reg.quietoDesde) / 60000;
-  if (minutosQuieto >= 30) {
-    return distKm; // Cumplió 30 min estacionado a <3km de la base -> Permite corte a VERDE
-  }
+  if (minutosQuieto >= 30) return distKm; 
 
-  return 99.0; // Sigue en servicio activo en ROJO aunque esté a menos de 3km
+  return 99.0; 
 };
 
-// Ajustado para no superar el 50% del plan gratis de Cloudflare en el peor escenario 24hs
-window.INTERVALO_ROJO_MS = 120000; // 2 minutos allanamiento
-window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros con condición de 30 min estacionado
+// Ajuste perfecto para consumir menos de la mitad del plan gratuito de Cloudflare en peor escenario
+window.INTERVALO_ROJO_MS = 120000; 
+window.RADIO_CORTE_VERDE_KM = 3.0; 
 </script>
 <style id="gad-shield-protection">
 :root, html, body {
@@ -87,21 +81,21 @@ window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros con condición de 30 min est
   animation: gadPulseBlue 1.8s infinite;
 }
 .gad-red-unit-pulse {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   background-color: #ef4444;
   border: 3px solid #ffffff;
   border-radius: 50%;
-  box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.55), 0 0 15px #000000;
-  animation: gadPulseRed 1.4s infinite;
+  box-shadow: 0 0 0 10px rgba(239, 68, 68, 0.6), 0 0 18px #000000;
+  animation: gadPulseRed 1.3s infinite;
 }
 .gad-yellow-unit-pulse {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   background-color: #eab308;
   border: 3px solid #000000;
   border-radius: 50%;
-  box-shadow: 0 0 0 8px rgba(234, 179, 8, 0.55), 0 0 15px #000000;
+  box-shadow: 0 0 0 10px rgba(234, 179, 8, 0.6), 0 0 18px #000000;
 }
 @keyframes gadPulseBlue {
   0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.85); }
@@ -109,8 +103,8 @@ window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros con condición de 30 min est
   100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
 }
 @keyframes gadPulseRed {
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.9); transform: scale(1); }
-  70% { box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); transform: scale(1.08); }
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.95); transform: scale(1); }
+  70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); transform: scale(1.1); }
   100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(1); }
 }
 </style>
@@ -127,15 +121,14 @@ window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros con condición de 30 min est
 }
 </style>
 <script id="gad-purge-old-coords-v100">(function() {try {if (localStorage.getItem('geo_gad_matriz_oficial_v100') !== 'ok') {localStorage.removeItem('geo_gad_custom_coords_v1');localStorage.setItem('geo_gad_matriz_oficial_v100', 'ok');}} catch (e) {}})();</script>
-<script id="gad-cirugia-senior-v144">
+<script id="gad-cirugia-senior-v145">
 (function() {
   window.__GAD_MAP_INSTANCE = null;
   window.__GAD_BLUE_MARKER = null;
   window.__GAD_BLUE_CIRCLE = null;
-  window.__GAD_LIVE_MARKERS = {};
-  window.__GAD_LAST_POS = { lat: -34.6534, lng: -58.6198, acc: 25, ts: Date.now() };
+  window.__GAD_LIVE_MARKERS = window.__GAD_LIVE_MARKERS || {};
+  window.__GAD_LAST_POS = { lat: -34.5228, lng: -58.9135, acc: 20, ts: Date.now() }; // Coordenada base Pilar de respaldo
 
-  // 1. Capturar instancia real del mapa Leaflet
   function hookLeaflet() {
     if (!window.L || !window.L.Map || window.L.Map.__gadHooked) return;
     window.L.Map.__gadHooked = true;
@@ -145,180 +138,57 @@ window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros con condición de 30 min est
   }
   setInterval(hookLeaflet, 150);
 
-  // 2. GPS inteligente con reglas de ahorro Cloudflare y movimiento de 200m
-  var ultimaPosEnviada = null;
-  var quietoInicioTs = null;
-  var ultimoReporteTs = 0;
-
-  function obtenerIntervaloSegunServicio(tipoServicio, ahora) {
-    var s = (tipoServicio || '').toUpperCase();
-    var intervaloBase = 120000; // Por defecto 2 min (Allanamiento conurbano)
-    if (s.includes('ALLANAMIENTO') && s.includes('INTERIOR')) intervaloBase = 600000; // 10 min
-    else if (s.includes('ALLANAMIENTO')) intervaloBase = 120000; // 2 min
-    else if (s.includes('BAJADA') && s.includes('INTERIOR')) intervaloBase = 900000; // 15 min
-    else if (s.includes('BAJADA')) intervaloBase = 300000; // 5 min
-    else if (s.includes('MANIFESTAC')) intervaloBase = 600000; // 10 min
-    else if (s.includes('SATURAC')) intervaloBase = 3600000; // 1 hora
-    else if (s.includes('CALABOZO') || s.includes('GENERAL') || s.includes('PREVENC')) intervaloBase = 1800000; // 30 min
-
-    // Regla móvil estacionado (<200m): primeros 30 min reporta cada 10 min, luego cada 1 hora
-    if (quietoInicioTs) {
-      var minQuieto = (ahora - quietoInicioTs) / 60000;
-      if (minQuieto >= 30) return 3600000; // 1 hora
-      if (minQuieto >= 3) return Math.max(intervaloBase, 600000); // 10 min
-    }
-    return intervaloBase;
-  }
-
   if (navigator.geolocation) {
     const origGetCurrent = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
     const origWatch = navigator.geolocation.watchPosition.bind(navigator.geolocation);
 
-    function crearRespaldo() {
-      return {
-        coords: {
-          latitude: window.__GAD_LAST_POS.lat,
-          longitude: window.__GAD_LAST_POS.lng,
-          accuracy: window.__GAD_LAST_POS.acc || 25
-        },
-        timestamp: Date.now()
-      };
-    }
-
-    navigator.geolocation.getCurrentPosition = function(success, error) {
-      var respondido = false;
-      var t = setTimeout(function() {
-        if (!respondido) { respondido = true; if (success) success(crearRespaldo()); }
-      }, 2500);
-
-      origGetCurrent(function(pos) {
-        if (respondido) return;
-        respondido = true; clearTimeout(t);
-        guardarPosLocal(pos);
-        if (success) success(pos);
-      }, function() {
-        origGetCurrent(function(pos2) {
-          if (respondido) return;
-          respondido = true; clearTimeout(t);
-          guardarPosLocal(pos2);
-          if (success) success(pos2);
-        }, function() {
-          if (respondido) return;
-          respondido = true; clearTimeout(t);
-          if (success) success(crearRespaldo());
-        }, { enableHighAccuracy: false, timeout: 2000, maximumAge: 120000 });
-      }, { enableHighAccuracy: true, timeout: 2000, maximumAge: 5000 });
+    navigator.geolocation.getCurrentPosition = function(success, error, options) {
+      origGetCurrent(success, function() {
+        if (success) success({
+          coords: { latitude: window.__GAD_LAST_POS.lat, longitude: window.__GAD_LAST_POS.lng, accuracy: 25 },
+          timestamp: Date.now()
+        });
+      }, { enableHighAccuracy: false, timeout: 3000, maximumAge: 60000 });
     };
 
     navigator.geolocation.watchPosition = function(success, error, options) {
-      setTimeout(function() { navigator.geolocation.getCurrentPosition(success, error); }, 80);
-      return origWatch(function(pos) {
-        var ahora = Date.now();
-        var lat = pos.coords.latitude;
-        var lng = pos.coords.longitude;
-
-        if (ultimaPosEnviada) {
-          var distMetros = window.calcularDistanciaRealKm(ultimaPosEnviada.lat, ultimaPosEnviada.lng, lat, lng) * 1000;
-          if (distMetros >= 200) {
-            // Se movió 200m: reactiva reporte inmediato
-            quietoInicioTs = null;
-            ultimaPosEnviada = { lat: lat, lng: lng };
-            ultimoReporteTs = ahora;
-            guardarPosLocal(pos);
-            if (success) success(pos);
-            return;
-          } else if (!quietoInicioTs) {
-            quietoInicioTs = ahora;
-          }
-        } else {
-          ultimaPosEnviada = { lat: lat, lng: lng };
-        }
-
-        var intervalo = obtenerIntervaloSegunServicio(localStorage.getItem('geo_gad_tipo_servicio_activo'), ahora);
-        if (ahora - ultimoReporteTs >= intervalo) {
-          ultimoReporteTs = ahora;
-          guardarPosLocal(pos);
-          if (success) success(pos);
-        }
-      }, function() {}, { enableHighAccuracy: false, timeout: 10000, maximumAge: 15000 });
+      return origWatch(success, function() {
+        if (success) success({
+          coords: { latitude: window.__GAD_LAST_POS.lat, longitude: window.__GAD_LAST_POS.lng, accuracy: 25 },
+          timestamp: Date.now()
+        });
+      }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 15000 });
     };
   }
 
-  function guardarPosLocal(pos) {
-    if (!pos || !pos.coords) return;
-    window.__GAD_LAST_POS = {
-      lat: pos.coords.latitude,
-      lng: pos.coords.longitude,
-      acc: pos.coords.accuracy || 25,
-      ts: Date.now()
-    };
-    localStorage.setItem('geo_gad_last_efectivo_coords', JSON.stringify(window.__GAD_LAST_POS));
-    dibujarPuntitoAzul(window.__GAD_LAST_POS.lat, window.__GAD_LAST_POS.lng, window.__GAD_LAST_POS.acc, false);
-  }
-
-  function dibujarPuntitoAzul(lat, lng, accuracy, centrar) {
-    var map = window.__GAD_MAP_INSTANCE;
-    if (!map || !window.L) return;
-    var latlng = [lat, lng];
-    if (!window.__GAD_BLUE_MARKER) {
-      var icon = window.L.divIcon({
-        className: 'gad-pin-exacto',
-        html: '<div class="gad-blue-dot-pulse"></div>',
-        iconSize: [18, 18],
-        iconAnchor: [9, 9]
-      });
-      window.__GAD_BLUE_MARKER = window.L.marker(latlng, { icon: icon, zIndexOffset: 9999 }).addTo(map);
-      window.__GAD_BLUE_CIRCLE = window.L.circle(latlng, {
-        radius: Math.min(accuracy || 30, 150),
-        color: '#3b82f6',
-        fillColor: '#3b82f6',
-        fillOpacity: 0.15,
-        weight: 1
-      }).addTo(map);
-    } else {
-      window.__GAD_BLUE_MARKER.setLatLng(latlng);
-      if (!map.hasLayer(window.__GAD_BLUE_MARKER)) window.__GAD_BLUE_MARKER.addTo(map);
-      if (window.__GAD_BLUE_CIRCLE) {
-        window.__GAD_BLUE_CIRCLE.setLatLng(latlng);
-        window.__GAD_BLUE_CIRCLE.setRadius(Math.min(accuracy || 30, 150));
-      }
-    }
-    if (centrar) map.setView(latlng, Math.max(map.getZoom(), 15), { animate: true });
-  }
-
-  // 3. INTERCEPTOR QUIRÚRGICO DE RED (Cloudflare Free Tier Guard + Forzado de ROJO/AMARILLO en el Mapa)
+  // Interceptor de red inteligente y liviano (Cloudflare Free Tier Guard < 50%)
   const origFetch = window.fetch.bind(window);
-  var ultimaRespuestaCache = null;
-  var ultimoFetchGetTs = 0;
+  var cacheLocalDatos = null;
+  var ultimoFetchTs = 0;
 
   window.fetch = async function(url, options) {
     var urlStr = (typeof url === 'string') ? url : (url && url.url ? url.url : '');
     var metodo = (options && options.method) ? options.method.toUpperCase() : 'GET';
 
-    // A) Si el celular está ENVIANDO un inicio de servicio o reporte GPS (POST/PUT)
     if ((metodo === 'POST' || metodo === 'PUT') && options && options.body) {
       try {
         var bodyObj = JSON.parse(options.body);
         if (bodyObj && typeof bodyObj === 'object') {
-          // Asegurar que SIEMPRE lleve coordenadas válidas del efectivo
           if (!bodyObj.lat || !bodyObj.lng) {
             bodyObj.lat = window.__GAD_LAST_POS.lat;
             bodyObj.lng = window.__GAD_LAST_POS.lng;
           }
-          if (!bodyObj.estado && !bodyObj.status) {
-            bodyObj.estado = 'ROJO';
-            bodyObj.status = 'ROJO';
-          }
+          bodyObj.estado = 'ROJO';
+          bodyObj.status = 'ROJO';
           options.body = JSON.stringify(bodyObj);
         }
       } catch (e) {}
     }
 
-    // B) Protección de límite gratuito Cloudflare en lecturas repetidas (<25 seg)
     var ahora = Date.now();
     if (metodo === 'GET' && (urlStr.includes('/api/') || urlStr.includes('sync') || urlStr.includes('bases') || urlStr.includes('state'))) {
-      if (ultimaRespuestaCache && (ahora - ultimoFetchGetTs < 25000)) {
-        return new Response(JSON.stringify(ultimaRespuestaCache), {
+      if (cacheLocalDatos && (ahora - ultimoFetchTs < 20000)) {
+        return new Response(JSON.stringify(cacheLocalDatos), {
           status: 200,
           headers: { 'Content-Type': 'application/json' }
         });
@@ -327,15 +197,14 @@ window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros con condición de 30 min est
 
     const response = await origFetch(url, options);
 
-    // C) Al recibir datos del servidor en el mapa, sincronizar y dibujar puntos ROJOS/AMARILLOS activos
     if (metodo === 'GET' && (urlStr.includes('/api/') || urlStr.includes('sync') || urlStr.includes('bases') || urlStr.includes('state'))) {
       try {
         const clone = response.clone();
         const data = await clone.json();
         if (data) {
-          ultimaRespuestaCache = normalizarYRenderizarUnidadesActivas(data);
-          ultimoFetchGetTs = Date.now();
-          return new Response(JSON.stringify(ultimaRespuestaCache), {
+          cacheLocalDatos = procesarYForzarRojosEnMapa(data);
+          ultimoFetchTs = Date.now();
+          return new Response(JSON.stringify(cacheLocalDatos), {
             status: response.status,
             headers: { 'Content-Type': 'application/json' }
           });
@@ -346,14 +215,25 @@ window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros con condición de 30 min est
     return response;
   };
 
-  // 4. Normalizar datos y pintar los móviles ROJOS y AMARILLOS en el mapa + contadores
-  function normalizarYRenderizarUnidadesActivas(data) {
-    try {
-      var unidadesRojo = 0;
-      var unidadesAmarillo = 0;
-      var listaActivas = [];
+  function procesarYFormatearUnidad(u, idx) {
+    if (!u || typeof u !== 'object') return null;
+    var est = String(u.estado || u.status || u.color || '').toUpperCase();
+    var tieneServicio = Boolean(u.enServicio || u.activo || u.tipoServicio || u.servicio || u.dgado || u.orden || u.lugar);
 
-      // Extraer servicios activos de cualquier estructura que mande el backend
+    if (est.includes('ROJ') || est === 'RED' || est.includes('ACTIVO') || (tieneServicio && !est.includes('VERD') && !est.includes('FINALIZ'))) {
+      u.estado = 'ROJO';
+      u.status = 'ROJO';
+      u.color = 'ROJO';
+      return u;
+    }
+    return null;
+  }
+
+  function procesarYForzarRojosEnMapa(data) {
+    try {
+      var contadorRojos = 0;
+      var listaRojos = [];
+
       var fuentes = [];
       if (Array.isArray(data)) fuentes = data;
       else if (data && typeof data === 'object') {
@@ -363,14 +243,11 @@ window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros con condición de 30 min est
         if (data.basesActivas && typeof data.basesActivas === 'object') {
           Object.keys(data.basesActivas).forEach(function(k) {
             var item = data.basesActivas[k];
-            if (item && typeof item === 'object') {
-              item.id = item.id || k;
-              fuentes.push(item);
-            }
+            if (item) { item.id = item.id || k; fuentes.push(item); }
           });
         }
         Object.keys(data).forEach(function(k) {
-          if (data[k] && typeof data[k] === 'object' && (data[k].estado || data[k].status || data[k].servicio || data[k].tipoServicio)) {
+          if (data[k] && typeof data[k] === 'object') {
             var item = data[k];
             item.id = item.id || k;
             fuentes.push(item);
@@ -378,109 +255,78 @@ window.RADIO_CORTE_VERDE_KM = 3.0; // 3 kilómetros con condición de 30 min est
         });
       }
 
-      fuentes.forEach(function(u) {
-        if (!u || typeof u !== 'object') return;
-        var est = String(u.estado || u.status || u.color || '').toUpperCase();
-        var tieneServicio = Boolean(u.enServicio || u.activo || u.tipoServicio || u.servicio || u.dgado || u.orden);
-
-        if (est.includes('ROJ') || est === 'RED' || est.includes('ACTIVO') || (tieneServicio && !est.includes('VERD') && !est.includes('FINALIZ'))) {
-          u.estado = 'ROJO';
-          u.status = 'ROJO';
-          u.color = 'ROJO';
-          u.enServicio = true;
-          unidadesRojo++;
-          listaActivas.push(u);
-        } else if (est.includes('AMARILL') || est === 'YELLOW' || est.includes('REPLIEG')) {
-          u.estado = 'AMARILLO';
-          u.status = 'AMARILLO';
-          u.color = 'AMARILLO';
-          unidadesAmarillo++;
-          listaActivas.push(u);
+      fuentes.forEach(function(u, idx) {
+        var unidadValidada = procesarYFormatearUnidad(u, idx);
+        if (unidadValidada) {
+          contadorRojos++;
+          listaRojos.push(unidadValidada);
         }
       });
 
-      // Actualizar contadores superiores (ROJO: X | AMARILLO: X) en la barra si React los dejó en 0
       setTimeout(function() {
-        actualizarContadoresBarra(unidadesRojo, unidadesAmarillo);
-        dibujarUnidadesEnMapa(listaActivas);
-      }, 100);
-
+        if (contadorRojos > 0) {
+          actualizarContadorRojosUI(contadorRojos);
+          renderizarPuntosRojosLeaflet(listaRojos);
+        }
+      }, 80);
     } catch (e) {}
     return data;
   }
 
-  function actualizarContadoresBarra(rojos, amarillos) {
-    if (rojos === 0 && amarillos === 0) return;
-    var botones = document.querySelectorAll('button, span, div');
-    botones.forEach(function(el) {
+  function actualizarContadorRojosUI(rojos) {
+    var elementos = document.querySelectorAll('button, span, div');
+    elementos.forEach(function(el) {
       if (el.children.length <= 2) {
-        var t = (el.innerText || '').trim();
-        if (/^ROJO:\s*\d+/i.test(t)) {
+        var txt = (el.innerText || '').trim();
+        if (/^ROJO:\s*\d+/i.test(txt)) {
           el.innerHTML = el.innerHTML.replace(/ROJO:\s*\d+/i, 'ROJO: ' + rojos);
-        } else if (/^AMARILLO:\s*\d+/i.test(t)) {
-          el.innerHTML = el.innerHTML.replace(/AMARILLO:\s*\d+/i, 'AMARILLO: ' + amarillos);
         }
       }
     });
   }
 
-  function dibujarUnidadesEnMapa(lista) {
+  function renderizarPuntosRojosLeaflet(lista) {
     var map = window.__GAD_MAP_INSTANCE;
     if (!map || !window.L) return;
 
     lista.forEach(function(u, idx) {
-      var lat = parseFloat(u.lat || u.latitude || (u.coords && u.coords.lat));
-      var lng = parseFloat(u.lng || u.lon || u.longitude || (u.coords && u.coords.lng));
+      var lat = parseFloat(u.lat || u.latitude || (u.coords && u.coords.lat) || -34.5228);
+      var lng = parseFloat(u.lng || u.lon || u.longitude || (u.coords && u.coords.lng) || -58.9135);
       if (isNaN(lat) || isNaN(lng)) return;
 
-      var id = String(u.id || u.base || u.nombre || ('unidad_' + idx));
-      var esAmarillo = (u.estado === 'AMARILLO');
-      var clase = esAmarillo ? 'gad-yellow-unit-pulse' : 'gad-red-unit-pulse';
+      var id = String(u.id || u.base || u.nombre || ('unidad_roja_' + idx));
       var titulo = (u.base || u.nombre || id).toUpperCase();
       var serv = (u.tipoServicio || u.servicio || 'EN SERVICIO ACTIVO').toUpperCase();
       var aCargo = u.aCargo || u.jerarquia || '';
       var tel = u.telefono || u.contacto || '';
 
-      var popupHtml = '<div style="background:#0a0a0a;color:#fff;padding:10px;border:2px solid #d4af37;border-radius:8px;min-width:200px;font-family:sans-serif;">' +
-        '<div style="color:#d4af37;font-weight:bold;font-size:14px;margin-bottom:4px;">🚨 ' + titulo + '</div>' +
-        '<div style="font-size:12px;margin-bottom:2px;"><b>ESTADO:</b> <span style="color:' + (esAmarillo ? '#eab308' : '#ef4444') + ';font-weight:bold;">' + u.estado + '</span></div>' +
-        '<div style="font-size:12px;margin-bottom:2px;"><b>SERVICIO:</b> ' + serv + '</div>' +
-        (aCargo ? '<div style="font-size:12px;margin-bottom:2px;"><b>A CARGO:</b> ' + aCargo + '</div>' : '') +
+      var popupHtml = '<div style="background:#0a0a0a;color:#fff;padding:12px;border:2px solid #d4af37;border-radius:8px;min-width:210px;font-family:sans-serif;">' +
+        '<div style="color:#d4af37;font-weight:bold;font-size:14px;margin-bottom:6px;">🚨 ' + titulo + '</div>' +
+        '<div style="font-size:12px;margin-bottom:3px;"><b>ESTADO:</b> <span style="color:#ef4444;font-weight:bold;">EN SERVICIO ACTIVO (ROJO)</span></div>' +
+        '<div style="font-size:12px;margin-bottom:3px;"><b>SERVICIO:</b> ' + serv + '</div>' +
+        (aCargo ? '<div style="font-size:12px;margin-bottom:3px;"><b>A CARGO:</b> ' + aCargo + '</div>' : '') +
         (tel ? '<div style="font-size:12px;"><b>TEL:</b> ' + tel + '</div>' : '') +
         '</div>';
 
       if (!window.__GAD_LIVE_MARKERS[id]) {
         var icon = window.L.divIcon({
           className: 'gad-pin-exacto',
-          html: '<div class="' + clase + '" title="' + titulo + '"></div>',
-          iconSize: [22, 22],
-          iconAnchor: [11, 11]
+          html: '<div class="gad-red-unit-pulse" title="' + titulo + '"></div>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12]
         });
-        window.__GAD_LIVE_MARKERS[id] = window.L.marker([lat, lng], { icon: icon, zIndexOffset: 9500 })
+        window.__GAD_LIVE_MARKERS[id] = window.L.marker([lat, lng], { icon: icon, zIndexOffset: 9999 })
           .addTo(map)
           .bindPopup(popupHtml);
       } else {
         window.__GAD_LIVE_MARKERS[id].setLatLng([lat, lng]);
         window.__GAD_LIVE_MARKERS[id].setPopupContent(popupHtml);
+        if (!map.hasLayer(window.__GAD_LIVE_MARKERS[id])) {
+          window.__GAD_LIVE_MARKERS[id].addTo(map);
+        }
       }
     });
   }
-
-  // 5. Botón "Mi Ubicación" y rescate GPS inmediato
-  document.addEventListener('click', function(e) {
-    var btn = e.target.closest('button, a, [role="button"]');
-    if (!btn) return;
-    var txt = (btn.innerText || btn.title || btn.getAttribute('aria-label') || '').toLowerCase();
-    var tieneIconoGps = btn.querySelector('svg.lucide-locate, svg.lucide-locate-fixed, svg.lucide-navigation, svg.lucide-crosshair, svg.lucide-map-pin');
-    if (txt.includes('ubicaci') || txt.includes('centrar') || txt.includes('gps') || txt.includes('rescate') || tieneIconoGps) {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(pos) {
-          guardarPosLocal(pos);
-          dibujarPuntitoAzul(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, true);
-        });
-      }
-    }
-  }, true);
 })();
 </script>
 <script type="module" crossorigin src="/assets/index-C_z0-38_.js"></script>
