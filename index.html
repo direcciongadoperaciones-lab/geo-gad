@@ -1,19 +1,240 @@
-<!doctype html>
+const fs = require('fs');
+const path = require('path');
+
+console.log("==========================================================");
+console.log("  PARCHE GEO-GAD V142: GPS + PUNTOS ROJOS/AMARILLOS VIVO  ");
+console.log("==========================================================");
+
+const htmlV142 = `<!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GEO-GAD | Division Operaciones</title>
-    <meta property="og:title" content="GEOLOCALIZACION GAD - DIVISION OPERACIONES" />
-    <meta property="og:description" content="Sistema Oficial de Geolocalizacion Operativa GAD PBA" />
-    <meta property="og:image" content="/icons/escudo-pwa.jpg" />
-    <meta name="theme-color" content="#000000" />
-    <link rel="apple-touch-icon" href="/icons/escudo-pwa.jpg" />
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  </head>
-  <body class="bg-black text-white m-0 p-0 overflow-x-hidden">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<head>
+<script id="gad-autoclean-vercel-cache-v140">(function() {try {var VERSION_ACTUAL = "GAD_PBA_V142_CLOUDFLARE";var verGuardada = localStorage.getItem("geo_gad_client_version");if (verGuardada !== VERSION_ACTUAL) {if ('serviceWorker' in navigator) {navigator.serviceWorker.getRegistrations().then(function(regs) {for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }});}if (window.caches && typeof window.caches.keys === "function") {window.caches.keys().then(function(keys) {keys.forEach(function(key) { window.caches.delete(key); });});}localStorage.setItem("geo_gad_client_version", VERSION_ACTUAL);if (window.location.hostname.includes("vercel.app") || !localStorage.getItem("geo_gad_reloaded_clean")) {localStorage.setItem("geo_gad_reloaded_clean", "1");window.location.reload(true);}}} catch (e) {}})();</script>
+<script id="gad-purge-yesterday-v110">(function() {try {var hoy = new Date().toLocaleDateString('es-AR');var ultDia = localStorage.getItem('geo_gad_dia_operativo_v110');if (ultDia !== hoy) {localStorage.setItem('geo_gad_dia_operativo_v110', hoy);}} catch (e) {}})();</script>
+<script id="gad-clean-legacy-sw">(function() {try {if ('serviceWorker' in navigator) {navigator.serviceWorker.getRegistrations().then(function(regs) {for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }});}var ver = localStorage.getItem('geo_gad_migration_v90');if (ver !== 'ok') {localStorage.removeItem('geo_gad_custom_coords_v1');localStorage.removeItem('geo_gad_force_verde_token');localStorage.removeItem('geo_gad_reset_token');localStorage.setItem('geo_gad_migration_v90', 'ok');}} catch (e) {}})();</script>
+<meta name="color-scheme" content="only light" />
+<meta name="supported-color-schemes" content="light" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#000000" />
+<title>GEO-GAD | División Operaciones</title>
+<link rel="icon" type="image/svg+xml" href="/logo.svg" />
+<link rel="apple-touch-icon" href="/icons/escudo-pwa.jpg" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script id="gad-geofence-4km">
+window.calcularDistanciaKmGAD = function(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+window.INTERVALO_ROJO_MS = 60000;
+window.RADIO_CORTE_VERDE_KM = 3.0;
+</script>
+<style id="gad-shield-protection">
+:root, html, body {
+  color-scheme: only light !important;
+  forced-color-adjust: none !important;
+  -webkit-forced-color-adjust: none !important;
+}
+.leaflet-marker-icon, .leaflet-marker-icon svg, .custom-gad-shield, .custom-gad-shield svg, .leaflet-pane svg {
+  color-scheme: only light !important;
+  forced-color-adjust: none !important;
+  -webkit-forced-color-adjust: none !important;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.95)) !important;
+  -webkit-filter: drop-shadow(0 3px 6px rgba(0,0,0,0.95)) !important;
+}
+.gad-blue-dot-pulse {
+  width: 18px;
+  height: 18px;
+  background-color: #2563eb;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.4), 0 0 12px rgba(0,0,0,0.9);
+  animation: gadPulseBlue 1.8s infinite;
+}
+@keyframes gadPulseBlue {
+  0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.8); }
+  70% { box-shadow: 0 0 0 14px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+}
+</style>
+<style id="gad-pin-exacto-style-v100">
+.gad-pin-exacto {
+  background: transparent !important;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.leaflet-marker-icon.gad-pin-exacto {
+  animation: none !important;
+  transition: none !important;
+}
+</style>
+<script id="gad-purge-old-coords-v100">(function() {try {if (localStorage.getItem('geo_gad_matriz_oficial_v100') !== 'ok') {localStorage.removeItem('geo_gad_custom_coords_v1');localStorage.setItem('geo_gad_matriz_oficial_v100', 'ok');}} catch (e) {}})();</script>
+<script id="gad-gps-and-live-sync-v142">
+(function() {
+  window.__GAD_MAP_INSTANCE = null;
+  window.__GAD_BLUE_MARKER = null;
+  window.__GAD_BLUE_CIRCLE = null;
+  window.__GAD_LAST_POS = null;
+
+  // 1. Capturar el mapa Leaflet apenas se inicializa
+  function hookLeaflet() {
+    if (!window.L || !window.L.Map || window.L.Map.__gadHooked) return;
+    window.L.Map.__gadHooked = true;
+    window.L.Map.addInitHook(function() {
+      window.__GAD_MAP_INSTANCE = this;
+      if (window.__GAD_LAST_POS) {
+        dibujarPuntitoAzul(window.__GAD_LAST_POS.lat, window.__GAD_LAST_POS.lng, window.__GAD_LAST_POS.acc, false);
+      }
+    });
+  }
+  setInterval(hookLeaflet, 200);
+
+  // 2. Destrabar el GPS del móvil (con fallback inmediato si el satélite tarda)
+  if (navigator.geolocation) {
+    const origGetCurrent = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation);
+    const origWatch = navigator.geolocation.watchPosition.bind(navigator.geolocation);
+
+    navigator.geolocation.getCurrentPosition = function(success, error, options) {
+      origGetCurrent(function(pos) {
+        procesarPosicionEfectivo(pos);
+        if (success) success(pos);
+      }, function(err) {
+        origGetCurrent(function(posFallback) {
+          procesarPosicionEfectivo(posFallback);
+          if (success) success(posFallback);
+        }, function(err2) {
+          if (error) error(err2);
+        }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+      }, { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 });
+    };
+
+    navigator.geolocation.watchPosition = function(success, error, options) {
+      return origWatch(function(pos) {
+        procesarPosicionEfectivo(pos);
+        if (success) success(pos);
+      }, function(err) {
+        origGetCurrent(function(posFallback) {
+          procesarPosicionEfectivo(posFallback);
+          if (success) success(posFallback);
+        }, function() {}, { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 });
+        if (error) error(err);
+      }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 3000 });
+    };
+  }
+
+  // 3. Dibujar el puntito azul y centrar cuando se aprieta "Mi Ubicación"
+  function dibujarPuntitoAzul(lat, lng, accuracy, centrar) {
+    var map = window.__GAD_MAP_INSTANCE;
+    if (!map || !window.L) return;
+
+    var latlng = [lat, lng];
+    if (!window.__GAD_BLUE_MARKER) {
+      var icon = window.L.divIcon({
+        className: 'gad-pin-exacto',
+        html: '<div class="gad-blue-dot-pulse"></div>',
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
+      window.__GAD_BLUE_MARKER = window.L.marker(latlng, { icon: icon, zIndexOffset: 9999 }).addTo(map);
+      window.__GAD_BLUE_CIRCLE = window.L.circle(latlng, {
+        radius: Math.min(accuracy || 30, 150),
+        color: '#3b82f6',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.15,
+        weight: 1
+      }).addTo(map);
+    } else {
+      window.__GAD_BLUE_MARKER.setLatLng(latlng);
+      if (!map.hasLayer(window.__GAD_BLUE_MARKER)) {
+        window.__GAD_BLUE_MARKER.addTo(map);
+      }
+      if (window.__GAD_BLUE_CIRCLE) {
+        window.__GAD_BLUE_CIRCLE.setLatLng(latlng);
+        window.__GAD_BLUE_CIRCLE.setRadius(Math.min(accuracy || 30, 150));
+      }
+    }
+
+    if (centrar) {
+      map.setView(latlng, Math.max(map.getZoom(), 15), { animate: true });
+    }
+  }
+
+  // 4. Procesar posición y forzar reporte a la base activa (ROJO / AMARILLO / VERDE)
+  function procesarPosicionEfectivo(pos) {
+    if (!pos || !pos.coords) return;
+    var lat = pos.coords.latitude;
+    var lng = pos.coords.longitude;
+    var acc = pos.coords.accuracy || 25;
+
+    window.__GAD_LAST_POS = { lat: lat, lng: lng, acc: acc, ts: Date.now() };
+    localStorage.setItem('geo_gad_last_efectivo_coords', JSON.stringify(window.__GAD_LAST_POS));
+    dibujarPuntitoAzul(lat, lng, acc, false);
+
+    // Disparar eventos para React
+    window.dispatchEvent(new CustomEvent('gad-ubicacion-efectivo', { detail: window.__GAD_LAST_POS }));
+    window.dispatchEvent(new Event('storage'));
+  }
+
+  // 5. Detectar toque en botón de ubicación o rescate GPS
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('button, a, [role="button"]');
+    if (!btn) return;
+    var txt = (btn.innerText || btn.title || btn.getAttribute('aria-label') || '').toLowerCase();
+    var tieneIconoGps = btn.querySelector('svg.lucide-locate, svg.lucide-locate-fixed, svg.lucide-navigation, svg.lucide-crosshair, svg.lucide-map-pin');
+
+    if (txt.includes('ubicaci') || txt.includes('centrar') || txt.includes('gps') || txt.includes('mi pos') || tieneIconoGps) {
+      if (window.__GAD_LAST_POS) {
+        dibujarPuntitoAzul(window.__GAD_LAST_POS.lat, window.__GAD_LAST_POS.lng, window.__GAD_LAST_POS.acc, true);
+      }
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          procesarPosicionEfectivo(pos);
+          dibujarPuntitoAzul(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy, true);
+        });
+      }
+    }
+  }, true);
+
+  // 6. Activar GPS al cargar y mantener vivo el refresco cada 30s
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+          procesarPosicionEfectivo(pos);
+        });
+      }
+    }, 1000);
+  });
+})();
+</script>
+<script type="module" crossorigin src="/assets/index-C_z0-38_.js"></script>
+<link rel="stylesheet" crossorigin href="/assets/index-rsKGP0I_.css">
+<link rel="manifest" href="/manifest.webmanifest">
+<script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script>
+</head>
+<body class="bg-black text-white select-none">
+<div id="root"></div>
+</body>
+</html>`;
+
+const rootIndex = path.join(__dirname, 'index.html');
+fs.writeFileSync(rootIndex, htmlV142, 'utf8');
+console.log("✅ index.html principal actualizado a V142.");
+
+const distIndex = path.join(__dirname, 'dist', 'index.html');
+if (fs.existsSync(path.join(__dirname, 'dist'))) {
+  fs.writeFileSync(distIndex, htmlV142, 'utf8');
+  console.log("✅ dist/index.html actualizado a V142.");
+}
+
+console.log("==========================================================");
+console.log("  ¡LISTO! AHORA SUBILO CON GIT ADD / COMMIT / PUSH        ");
+console.log("==========================================================");
